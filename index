@@ -1,0 +1,177 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Rituale — Combinazione di Simboli</title>
+<style>
+  :root{
+    --bg:#000; --fg:#eaeaea; --muted:#8b8b8b;
+    --accent:#ff7a18; --accent2:#c679ff;
+    --card:#0a0a0a; --ok:#22c55e; --err:#ef4444;
+  }
+  *{box-sizing:border-box} html,body{height:100%}
+  body{
+    margin:0; background:var(--bg); color:var(--fg);
+    font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial;
+    display:flex; align-items:center; justify-content:center;
+  }
+  .wrap{ width:min(1024px, 92vw); text-align:center; }
+  h1{ font-size:clamp(20px,3vw,28px); margin:0 0 6px; letter-spacing:.04em; }
+  .sub{ color:var(--muted); margin:0 0 20px; }
+  .panel{
+    display:grid; grid-template-columns:repeat(4, 1fr); gap:14px;
+    padding:16px; border-radius:18px; background:linear-gradient(180deg, #0d0d0d, #000);
+    box-shadow: 0 20px 60px rgba(0,0,0,.55), inset 0 1px 0 rgba(255,255,255,.04);
+  }
+  .slot{
+    background:radial-gradient(120px 120px at 50% 30%, rgba(255,122,24,.08), transparent 60%), var(--card);
+    border:1px solid #1b1b1b; border-radius:16px; padding:14px;
+    display:flex; align-items:center; justify-content:center; gap:10px; position:relative; min-height:140px;
+  }
+  .symbol{
+    width:92px; height:92px; border-radius:14px;
+    background:#0d0d0d; display:flex; align-items:center; justify-content:center;
+    font-size:52px; font-weight:800; letter-spacing:.06em;
+    border:1px solid #1f1f1f; box-shadow: inset 0 2px 0 rgba(255,255,255,.04);
+  }
+  .arrow{ width:40px; height:40px; display:flex; align-items:center; justify-content:center; font-size:20px; }
+  button{
+    appearance:none; border:0; cursor:pointer; border-radius:12px; padding:10px 12px; font-weight:700;
+    background:#121212; color:var(--fg); border:1px solid #1f1f1f;
+  }
+  button:hover{ outline:1px solid #2a2a2a }
+  .action{ margin:18px 0 8px; display:flex; gap:10px; justify-content:center; }
+  .msg{ min-height:28px; color:var(--muted); }
+  .success{ color:var(--ok); font-weight:800; animation: pop .6s ease; }
+  .fail{ color:var(--err); font-weight:700; }
+  @keyframes pop { from{ transform:scale(.96); opacity:.4 } to{ transform:scale(1); opacity:1 } }
+  .footer{ margin-top:18px; color:#7a7a7a; font-size:.92rem }
+  .tiny{ font-size:.85rem; color:#8d8d8d }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>Combinazione di Simboli</h1>
+    <p class="sub">Scegli i 4 simboli nell'ordine corretto per aprire il portale.</p>
+
+    <div class="panel" id="panel"><!-- slot creati via JS --></div>
+
+    <div class="action">
+      <button id="shuffle">Mescola</button>
+      <button id="check">Verifica</button>
+    </div>
+    <div id="message" class="msg"></div>
+    <div class="footer tiny">Suggerimento: per ora i simboli sono lettere, ma puoi sostituirli con immagini (vedi commenti nel codice).</div>
+  </div>
+
+<script>
+/* =====================
+   CONFIGURAZIONE
+   =====================
+   SYMBOLS: lista dei simboli. Ogni simbolo ha:
+     - id   -> la chiave usata per il controllo della combinazione
+     - view -> come appare nello slot (può essere HTML; p.es. <img ...>)
+   Per usare immagini, metti in 'view' una stringa con <img>:
+     { id: 'teschio', view: '<img src="media/teschio.png" alt="teschio" style="width:72px;height:72px">' }
+*/
+const SYMBOLS = [
+  { id: 'A', view: 'A' }, { id: 'B', view: 'B' }, { id: 'C', view: 'C' },
+  { id: 'D', view: 'D' }, { id: 'E', view: 'E' }, { id: 'F', view: 'F' },
+  { id: 'G', view: 'G' }, { id: 'H', view: 'H' }, { id: 'I', view: 'I' },
+  { id: 'J', view: 'J' }, { id: 'K', view: 'K' }, { id: 'N', view: 'N' },
+  { id: 'O', view: 'O' }
+];
+
+// Sequenza corretta (cambiala): qui K N O C = “KNOCK” senza la K finale per far provare
+const TARGET = ['K','N','O','C'];
+
+// Numero di slot
+const SLOTS = 4;
+
+// ---------- Logica ----------
+const panel   = document.getElementById('panel');
+const message = document.getElementById('message');
+let state = []; // indice di SYMBOLS per ogni slot
+
+function createSlot(i){
+  const wrap = document.createElement('div');
+  wrap.className = 'slot';
+
+  const left = document.createElement('button');
+  left.className = 'arrow'; left.setAttribute('aria-label','precedente'); left.textContent = '◀';
+
+  const sym = document.createElement('div');
+  sym.className = 'symbol'; sym.setAttribute('role','img'); sym.setAttribute('aria-live','polite');
+
+  const right = document.createElement('button');
+  right.className = 'arrow'; right.setAttribute('aria-label','successivo'); right.textContent = '▶';
+
+  wrap.appendChild(left); wrap.appendChild(sym); wrap.appendChild(right);
+
+  // stato iniziale random
+  state[i] = Math.floor(Math.random() * SYMBOLS.length);
+  renderSymbol(sym, state[i]);
+
+  left.addEventListener('click', ()=>{
+    state[i] = (state[i] - 1 + SYMBOLS.length) % SYMBOLS.length;
+    renderSymbol(sym, state[i]); message.textContent = '';
+  });
+  right.addEventListener('click', ()=>{
+    state[i] = (state[i] + 1) % SYMBOLS.length;
+    renderSymbol(sym, state[i]); message.textContent = '';
+  });
+
+  return wrap;
+}
+
+function renderSymbol(el, idx){ el.innerHTML = SYMBOLS[idx].view; }
+
+function build(){
+  panel.innerHTML=''; state = [];
+  for(let i=0;i<SLOTS;i++) panel.appendChild(createSlot(i));
+}
+
+function shuffle(){
+  for (let i=0;i<SLOTS;i++) state[i] = Math.floor(Math.random()*SYMBOLS.length);
+  [...panel.children].forEach((slotEl, i)=> renderSymbol(slotEl.querySelector('.symbol'), state[i]));
+  message.textContent = '';
+}
+
+function check(){
+  const pickedIds = state.map(idx => SYMBOLS[idx].id);
+  const ok = pickedIds.length === TARGET.length && pickedIds.every((id, i)=> id === TARGET[i]);
+  if(ok){
+    message.className = 'msg success';
+    message.textContent = 'bravo';
+    confetti();
+  } else {
+    message.className = 'msg fail';
+    message.textContent = 'sbagliato';
+  }
+}
+
+// mini-confetti senza librerie
+function confetti(){
+  const n = 60;
+  for (let i=0;i<n;i++){
+    const p = document.createElement('div');
+    const size = 4 + Math.random()*6;
+    p.style.position='fixed'; p.style.left=(Math.random()*100)+'vw'; p.style.top='-10px';
+    p.style.width=size+'px'; p.style.height=size+'px';
+    p.style.background = Math.random()>.5 ? 'var(--accent)' : 'var(--accent2)';
+    p.style.borderRadius='2px'; p.style.opacity=.9; p.style.zIndex=9999;
+    document.body.appendChild(p);
+    const x = (Math.random()*2 -1) * 60;
+    const dur = 1500 + Math.random()*1200;
+    p.animate([{transform:`translate(${x}px, 0)`},{transform:`translate(${x*1.2}px, 95vh)`}],
+              {duration:dur, easing:'cubic-bezier(.2,.7,.2,1)'}).onfinish = ()=> p.remove();
+  }
+}
+
+document.getElementById('shuffle').addEventListener('click', shuffle);
+document.getElementById('check').addEventListener('click', check);
+build();
+</script>
+</body>
+</html>
