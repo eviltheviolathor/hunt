@@ -70,16 +70,16 @@
    CONFIGURAZIONE
    ===================== */
 
-// Definiamo i 12 simboli come immagini
+// Definiamo i 12 simboli come immagini (1.png … 12.png dentro /media/)
 const SYMBOLS = [];
-for (let i=1;i<=12;i++){
+for (let i = 1; i <= 12; i++) {
   SYMBOLS.push({
     id: String(i),
-    view: `<img src="media/${i}.png" alt="simbolo ${i}">`
+    view: `<img src="media/${i}.png" alt="simbolo ${i}" style="width:72px;height:72px">`
   });
 }
 
-// Sequenza corretta (1,2,3,4)
+// Sequenza corretta: 1,2,3,4
 const TARGET = ['1','2','3','4'];
 const SLOTS = 4;
 
