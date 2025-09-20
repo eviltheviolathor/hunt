@@ -71,26 +71,26 @@
   #game{display:none;width:100%;max-width:min(960px,96vw);margin:28px auto 0;text-align:center}
   #game h2{margin:8px 0 6px;font-size:clamp(20px,4vw,28px);color:var(--accent);text-shadow:0 0 10px var(--accent)}
   #goal{color:var(--muted); margin-bottom:8px}
-  #canvasWrap{background:#000;border:2px solid rgba(43,255,136,.3);border-radius:10px;padding:8px}
+  #canvasWrap{background:#000;border:2px solid rgba(43,255,136,.3);border-radius:10px;padding:8px; position:relative;}
   canvas{display:block;width:100%;height:auto;background:#000}
   .hud{color:var(--muted);margin-top:8px;font-size:clamp(14px,2vw,16px)}
   .score{color:var(--accent2);margin-left:6px}
   .win{color:var(--ok); margin-top:10px}
   .loading{color:var(--accent2); margin:8px 0}
 
-  #canvasWrap{position:relative} /* per HUD sopra il canvas */
-.scoreHud{
-  position:absolute; left:8px; top:8px;
-  padding:6px 10px; font-weight:700;
-  background:rgba(0,0,0,.55);
-  border:1px solid rgba(43,255,136,.35);
-  border-radius:8px; color:var(--accent2);
-  text-shadow:0 0 8px rgba(43,255,136,.35);
-}
-  
+  /* HUD punteggio overlay */
+  .scoreHud{
+    position:absolute; left:8px; top:8px;
+    padding:6px 10px; font-weight:700;
+    background:rgba(0,0,0,.55);
+    border:1px solid rgba(43,255,136,.35);
+    border-radius:8px; color:var(--accent2);
+    text-shadow:0 0 8px rgba(43,255,136,.35);
+    user-select:none; pointer-events:none;
+  }
 </style>
 </head>
-<body><h1>diominchia2</h1>
+<body><h1>diominchia3333</h1>
   <main class="page">
     <!-- HERO -->
     <div class="hero" id="heroBox"></div>
@@ -134,7 +134,10 @@
     <section id="game">
       <h2>La Corsa della Zucca</h2>
       <div id="goal">Obiettivo: raggiungi un punteggio di <strong>666</strong> per superare il livello.</div>
-      <div id="canvasWrap"><canvas id="runner" width="900" height="300"></canvas></div>
+      <div id="canvasWrap">
+        <div id="scoreHud" class="scoreHud">0</div>
+        <canvas id="runner" width="900" height="300"></canvas>
+      </div>
       <div class="hud">Controlli: <strong>SPAZIO</strong> o <strong>↑</strong> (oppure tocca/tap). Punteggio: <span class="score" id="score">0</span></div>
       <div class="loading" id="loadingMsg">Caricamento immagini…</div>
       <div class="win" id="winMsg" style="display:none">✦ Hai domato la Zucca! Livello superato. ✦</div>
@@ -231,212 +234,211 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('completeBtn').onclick=submitRitual;
   ;[f1,f2,f3].forEach(el=>el.addEventListener('keydown',e=>{ if(e.key==='Enter') submitRitual(); e.stopPropagation(); }));
 
-/* =========================
-   MINIGIOCO — Pumpkin Runner (con IMMAGINI + preload)
-   ========================= */
-const TARGET_SCORE = 666;
+  /* =========================
+     MINIGIOCO — Pumpkin Runner (con IMMAGINI + preload)
+     ========================= */
+  const TARGET_SCORE = 666;
 
-// Canvas & UI
-const cvs = document.getElementById('runner'), ctx = cvs.getContext('2d');
-const scoreHudEl = document.getElementById('scoreHud');
-const startBtn = document.getElementById('startGame'),
-      restartBtn = document.getElementById('restartGame'),
-      winMsg = document.getElementById('winMsg'),
-      loadingMsg = document.getElementById('loadingMsg');
+  // Canvas & UI
+  const cvs = document.getElementById('runner'), ctx = cvs.getContext('2d');
+  const scoreHudEl = document.getElementById('scoreHud');
+  const scoreEl = document.getElementById('score');
+  const startBtn = document.getElementById('startGame'),
+        restartBtn = document.getElementById('restartGame'),
+        winMsg = document.getElementById('winMsg'),
+        loadingMsg = document.getElementById('loadingMsg');
 
-// Precarica immagini (giocatore + 4 mostri)
-const playerImg = new Image(); playerImg.src = 'media/zucca.png?v=1';
-const monsterNames = ['mostro1.png','mostro2.png','mostro3.png','mostro4.png'];
-const monsterImgs = monsterNames.map(n => { const im=new Image(); im.src='media/'+n+'?v=1'; return im; });
+  // Precarica immagini (giocatore + 4 mostri)
+  const playerImg = new Image(); playerImg.src = 'media/zucca.png?v=1';
+  const monsterNames = ['mostro1.png','mostro2.png','mostro3.png','mostro4.png'];
+  const monsterImgs = monsterNames.map(n => { const im=new Image(); im.src='media/'+n+'?v=1'; return im; });
 
-function preload(imgs){
-  const toLoad = imgs.filter(img => !img.complete || img.naturalWidth===0);
-  if(toLoad.length===0) return Promise.resolve();
-  return Promise.allSettled(toLoad.map(img => new Promise(res=>{
-    img.addEventListener('load', res, {once:true});
-    img.addEventListener('error', res, {once:true}); // anche in errore “sblocca”
-  })));
-}
-
-// Stato di gioco
-let running=false, gameOver=false, score=0, lastSpawn=0, lastTs=null;
-let speed = 2.2;                // <<< più lento all'inizio
-const MAX_SPEED = 7.5;
-const ACCEL_PER_SEC = 0.6;      // incremento graduale nel tempo
-
-const ground = cvs.height - 40;
-const player = { x:80, y:0, w:44, h:44, vy:0, onGround:true };
-player.y = ground - player.h;
-
-const obstacles=[];
-
-// Fisica salto migliorata
-const GRAVITY = 0.55;
-const JUMP_VY = -11.6;
-const COYOTE_TIME = 0.12;   // tempo dopo aver lasciato il terreno in cui puoi ancora saltare
-const JUMP_BUFFER = 0.12;   // se premi un filo prima di atterrare, salta appena tocchi terra
-let coyoteTimer = 0;
-let jumpBufferTimer = 0;
-let jumpHeld = false;
-
-function requestJump(){
-  jumpBufferTimer = JUMP_BUFFER;
-}
-
-function tryPerformJump(){
-  if ((coyoteTimer > 0 || player.onGround) && jumpBufferTimer > 0){
-    player.vy = JUMP_VY;
-    player.onGround = false;
-    coyoteTimer = 0;
-    jumpBufferTimer = 0;
-  }
-}
-
-function spawnObstacle(){
-  const img = monsterImgs[Math.floor(Math.random()*monsterImgs.length)];
-  const w = 46 + Math.random()*10;
-  const ratio = (img && img.naturalWidth) ? (img.naturalHeight/img.naturalWidth) : 1.2;
-  const h = w * ratio;
-  obstacles.push({ x:cvs.width+10, y:ground-h, w, h, img });
-}
-
-function drawImage(img, x,y,w,h){ if(img && img.complete && img.naturalWidth) ctx.drawImage(img,x,y,w,h); }
-
-function resetGame(){
-  running=false; gameOver=false; score=0; speed=2.2; lastTs=null; lastSpawn=0;
-  winMsg.style.display='none';
-  obstacles.length=0; player.y=ground-player.h; player.vy=0; player.onGround=true;
-  scoreHudEl.textContent='0';
-  coyoteTimer = 0; jumpBufferTimer = 0; jumpHeld = false;
-}
-
-function loop(ts){
-  if(!running) return;
-  const delta = lastTs ? (ts-lastTs)/1000 : 0; lastTs = ts;
-
-  // Accelerazione dolce
-  speed = Math.min(MAX_SPEED, speed + ACCEL_PER_SEC * delta);
-
-  // punteggio: ~2.2 punti/s di base; cresce un filo con la velocità
-  score += (2.2 + (speed-2.2)*0.3) * delta;
-  scoreHudEl.textContent = Math.floor(score);
-  if(score >= TARGET_SCORE && !gameOver){
-    running=false; gameOver=true; winMsg.style.display='block'; restartBtn.style.display='inline-block';
+  function preload(imgs){
+    const toLoad = imgs.filter(img => !img.complete || img.naturalWidth===0);
+    if(toLoad.length===0) return Promise.resolve();
+    return Promise.allSettled(toLoad.map(img => new Promise(res=>{
+      img.addEventListener('load', res, {once:true});
+      img.addEventListener('error', res, {once:true}); // anche in errore “sblocca”
+    })));
   }
 
-  ctx.clearRect(0,0,cvs.width,cvs.height);
+  // Stato di gioco
+  let running=false, gameOver=false, score=0, lastSpawn=0, lastTs=null;
+  let speed = 2.2;                // <<< più lento all'inizio
+  const MAX_SPEED = 7.5;
+  const ACCEL_PER_SEC = 0.6;      // incremento graduale nel tempo
 
-  // terreno
-  ctx.strokeStyle='rgba(43,255,136,.3)';
-  ctx.beginPath(); ctx.moveTo(0,ground+0.5); ctx.lineTo(cvs.width,ground+0.5); ctx.stroke();
+  const ground = cvs.height - 40;
+  const player = { x:80, y:0, w:44, h:44, vy:0, onGround:true };
+  player.y = ground - player.h;
 
-  // spawn ostacoli: frequenza si adatta alla velocità (mai sotto ~0.9s)
-  const baseInterval = 1800 - speed*120;             // diminuisce con speed
-  const jitter = 500 * Math.random();
-  const interval = Math.max(900, baseInterval + jitter);
-  if(ts - lastSpawn > interval){ spawnObstacle(); lastSpawn = ts; }
+  const obstacles=[];
 
-  // ostacoli
-  for(let i=obstacles.length-1;i>=0;i--){
-    const o=obstacles[i];
-    o.x -= speed;
-    drawImage(o.img, o.x, o.y, o.w, o.h);
-    if(o.x + o.w < 0) obstacles.splice(i,1);
+  // Fisica salto migliorata
+  const GRAVITY = 0.55;
+  const JUMP_VY = -11.6;
+  const COYOTE_TIME = 0.12;   // tempo dopo aver lasciato il terreno in cui puoi ancora saltare
+  const JUMP_BUFFER = 0.12;   // se premi poco prima di atterrare, salta appena tocchi terra
+  let coyoteTimer = 0;
+  let jumpBufferTimer = 0;
+  let jumpHeld = false;
 
-    // collisione con hitbox più permissive
-    const padP = 10, padO = 12;
-    const px=player.x+padP, py=player.y+padP, pw=player.w-2*padP, ph=player.h-2*padP;
-    const ox=o.x+padO, oy=o.y+padO, ow=o.w-2*padO, oh=o.h-2*padO;
-    if(px < ox + ow && px + pw > ox && py < oy + oh && py + ph > oy){
-      gameOver = true; running = false; restartBtn.style.display='inline-block';
-    }
-  }
-
-  // fisica player (coyote + buffer + salto variabile)
-  // gravità
-  player.vy += GRAVITY;
-  player.y += player.vy;
-
-  // atterraggio
-  if(player.y + player.h >= ground){
-    player.y = ground - player.h;
-    if(!player.onGround){ // appena atterrato
-      player.onGround = true;
-      coyoteTimer = 0;
-      // se avevi premuto poco prima di atterrare, esegui subito il salto
-      tryPerformJump();
-    } else {
-      player.onGround = true;
-    }
-    if(player.vy > 0) player.vy = 0;
-  } else {
-    // in aria: coyote time conteggia se stavi a terra poco fa
-    if(player.onGround){
-      // transizione: lascia il terreno
+  function requestJump(){ jumpBufferTimer = JUMP_BUFFER; }
+  function tryPerformJump(){
+    if ((coyoteTimer > 0 || player.onGround) && jumpBufferTimer > 0){
+      player.vy = JUMP_VY;
       player.onGround = false;
-      coyoteTimer = COYOTE_TIME;
-    } else {
-      coyoteTimer -= delta;
+      coyoteTimer = 0;
+      jumpBufferTimer = 0;
     }
   }
 
-  // salto variabile (se rilasci presto il tasto, tagli la salita)
-  if(!jumpHeld && player.vy < -3){
-    player.vy = -3;
+  function spawnObstacle(){
+    const img = monsterImgs[Math.floor(Math.random()*monsterImgs.length)];
+    const w = 46 + Math.random()*10;
+    const ratio = (img && img.naturalWidth) ? (img.naturalHeight/img.naturalWidth) : 1.2;
+    const h = w * ratio;
+    obstacles.push({ x:cvs.width+10, y:ground-h, w, h, img });
   }
 
-  // aggiorna buffer timer
-  jumpBufferTimer -= delta;
+  function drawImage(img, x,y,w,h){ if(img && img.complete && img.naturalWidth) ctx.drawImage(img,x,y,w,h); }
 
-  drawImage(playerImg, player.x, player.y, player.w, player.h);
+  function resetGame(){
+    running=false; gameOver=false; score=0; speed=2.2; lastTs=null; lastSpawn=0;
+    winMsg.style.display='none';
+    obstacles.length=0; player.y=ground-player.h; player.vy=0; player.onGround=true;
+    scoreHudEl.textContent='0'; scoreEl.textContent='0';
+    coyoteTimer = 0; jumpBufferTimer = 0; jumpHeld = false;
+  }
 
-  requestAnimationFrame(loop);
-}
+  function loop(ts){
+    if(!running) return;
+    const delta = lastTs ? (ts-lastTs)/1000 : 0; lastTs = ts;
 
-// Input: SPACE/UP o tap
-window.addEventListener('keydown', async (e)=>{
-  const tag=document.activeElement && document.activeElement.tagName;
-  if(tag==='INPUT' || tag==='TEXTAREA') return;
+    // Accelerazione dolce
+    speed = Math.min(MAX_SPEED, speed + ACCEL_PER_SEC * delta);
 
-  if(e.code==='Space' || e.code==='ArrowUp'){
-    e.preventDefault();
-    jumpHeld = true;
+    // punteggio: ~2.2 punti/s di base; cresce un filo con la velocità
+    score += (2.2 + (speed-2.2)*0.3) * delta;
+    const shown = Math.floor(score);
+    scoreHudEl.textContent = shown;
+    scoreEl.textContent = shown;
+
+    if(score >= TARGET_SCORE && !gameOver){
+      running=false; gameOver=true; winMsg.style.display='block'; restartBtn.style.display='inline-block';
+    }
+
+    ctx.clearRect(0,0,cvs.width,cvs.height);
+
+    // terreno
+    ctx.strokeStyle='rgba(43,255,136,.3)';
+    ctx.beginPath(); ctx.moveTo(0,ground+0.5); ctx.lineTo(cvs.width,ground+0.5); ctx.stroke();
+
+    // spawn ostacoli: frequenza si adatta alla velocità (mai sotto ~0.9s)
+    const baseInterval = 1800 - speed*120;             // diminuisce con speed
+    const jitter = 500 * Math.random();
+    const interval = Math.max(900, baseInterval + jitter);
+    if(ts - lastSpawn > interval){ spawnObstacle(); lastSpawn = ts; }
+
+    // ostacoli
+    for(let i=obstacles.length-1;i>=0;i--){
+      const o=obstacles[i];
+      o.x -= speed;
+      drawImage(o.img, o.x, o.y, o.w, o.h);
+      if(o.x + o.w < 0) obstacles.splice(i,1);
+
+      // collisione con hitbox più permissive
+      const padP = 10, padO = 12;
+      const px=player.x+padP, py=player.y+padP, pw=player.w-2*padP, ph=player.h-2*padP;
+      const ox=o.x+padO, oy=o.y+padO, ow=o.w-2*padO, oh=o.h-2*padO;
+      if(px < ox + ow && px + pw > ox && py < oy + oh && py + ph > oy){
+        gameOver = true; running = false; restartBtn.style.display='inline-block';
+      }
+    }
+
+    // fisica player (coyote + buffer + salto variabile)
+    // gravità
+    player.vy += GRAVITY;
+    player.y += player.vy;
+
+    // atterraggio
+    if(player.y + player.h >= ground){
+      player.y = ground - player.h;
+      if(!player.onGround){
+        player.onGround = true;
+        coyoteTimer = 0;
+        tryPerformJump(); // se avevi “bufferato” il salto prima di toccare
+      } else {
+        player.onGround = true;
+      }
+      if(player.vy > 0) player.vy = 0;
+    } else {
+      if(player.onGround){
+        player.onGround = false;
+        coyoteTimer = COYOTE_TIME;
+      } else {
+        coyoteTimer -= delta;
+      }
+    }
+
+    // salto variabile (rilasci = taglia la salita)
+    if(!jumpHeld && player.vy < -3){
+      player.vy = -3;
+    }
+
+    // aggiorna buffer
+    jumpBufferTimer -= delta;
+
+    drawImage(playerImg, player.x, player.y, player.w, player.h);
+
+    requestAnimationFrame(loop);
+  }
+
+  // Input: SPACE/UP o tap
+  window.addEventListener('keydown', async (e)=>{
+    const tag=document.activeElement && document.activeElement.tagName;
+    if(tag==='INPUT' || tag==='TEXTAREA') return;
+
+    if(e.code==='Space' || e.code==='ArrowUp'){
+      e.preventDefault();
+      jumpHeld = true;
+      if(!running && !gameOver){
+        await startGame();
+        requestJump(); // consenti salto immediato allo start
+      } else {
+        requestJump();
+        tryPerformJump();
+      }
+    }
+  });
+  window.addEventListener('keyup', (e)=>{
+    if(e.code==='Space' || e.code==='ArrowUp'){
+      jumpHeld = false;
+    }
+  });
+
+  document.getElementById('runner').addEventListener('pointerdown', ()=>{
     if(!running && !gameOver){
-      await startGame();         // avvio da tastiera
-      requestJump();             // consenti salto immediato allo start
+      startGame(); requestJump();
     } else {
-      requestJump();
-      tryPerformJump();
+      jumpHeld = true; requestJump(); tryPerformJump();
+    }
+  });
+  document.getElementById('runner').addEventListener('pointerup', ()=>{ jumpHeld=false; });
+
+  async function startGame(){
+    loadingMsg.style.display='block';
+    await preload([playerImg, ...monsterImgs]);
+    loadingMsg.style.display='none';
+
+    if(!running){
+      running = true; restartBtn.style.display='none'; requestAnimationFrame(loop);
     }
   }
+
+  document.getElementById('startGame').onclick = startGame;
+  document.getElementById('restartGame').onclick = ()=>{ resetGame(); startGame(); };
 });
-window.addEventListener('keyup', (e)=>{
-  if(e.code==='Space' || e.code==='ArrowUp'){
-    jumpHeld = false;
-  }
-});
-
-document.getElementById('runner').addEventListener('pointerdown', ()=>{
-  if(!running && !gameOver){
-    startGame(); requestJump();
-  } else {
-    jumpHeld = true; requestJump(); tryPerformJump();
-  }
-});
-document.getElementById('runner').addEventListener('pointerup', ()=>{ jumpHeld=false; });
-
-async function startGame(){
-  loadingMsg.style.display='block';
-  await preload([playerImg, ...monsterImgs]);
-  loadingMsg.style.display='none';
-
-  if(!running){
-    running = true; restartBtn.style.display='none'; requestAnimationFrame(loop);
-  }
-}
-
-document.getElementById('startGame').onclick = startGame;
-document.getElementById('restartGame').onclick = ()=>{ resetGame(); startGame(); };
 </script>
 </body>
 </html>
