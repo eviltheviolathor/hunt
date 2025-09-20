@@ -50,7 +50,6 @@
 
   .pentacolo{position:relative;width:min(90vw,600px);height:min(90vw,600px);margin:0 auto 24px}
   .pentacolo svg{transform:rotate(180deg)}
-
   .rit-field{position:absolute;transform:translate(-50%,-50%)}
   .rf-top    {left:50%; top:22%;  width:66%;}
   .rf-mid    {left:50%; top:50%;  width:60%;}
@@ -125,7 +124,7 @@
   .lore{
     max-width:min(900px,96vw);
     margin:28px auto 0;
-    text-align:center; /* centrato come richiesto */
+    text-align:center;
     background:rgba(0,0,0,.5);
     border:1px solid rgba(43,255,136,.25);
     border-radius:12px;
@@ -133,22 +132,10 @@
     line-height:1.6;
     display:none;
   }
-  .lore h3{
-    margin:0 0 8px; color:var(--accent);
-    font-size:clamp(18px,3vw,22px);
-    text-shadow:0 0 8px rgba(43,255,136,.25);
-  }
+  .lore h3{ margin:0 0 8px; color:var(--accent); font-size:clamp(18px,3vw,22px); text-shadow:0 0 8px rgba(43,255,136,.25); }
   .lore p{ margin:10px 0; color:var(--fg); }
-  .lore .instr{
-    margin-top:12px; color:var(--accent2);
-    border-top:1px dashed rgba(43,255,136,.25);
-    padding-top:10px; font-weight:700;
-  }
-  .lore button{
-    margin-top:12px; padding:10px 14px; border-radius:10px;
-    background:rgba(30,30,30,.9); color:#fff; border:2px solid rgba(43,255,136,.35);
-    font-weight:800; cursor:pointer;
-  }
+  .lore .instr{ margin-top:12px; color:var(--accent2); border-top:1px dashed rgba(43,255,136,.25); padding-top:10px; font-weight:700; }
+  .lore button{ margin-top:12px; padding:10px 14px; border-radius:10px; background:rgba(30,30,30,.9); color:#fff; border:2px solid rgba(43,255,136,.35); font-weight:800; cursor:pointer; }
   .lore .hidden-part{ display:none; }
 
   .blink{ animation: bl 0.12s linear infinite alternate; }
@@ -351,13 +338,14 @@ document.addEventListener('DOMContentLoaded', () => {
   let running=false, gameOver=false, score=0, lastSpawn=0, lastTs=null;
   let cleared=false;
 
-  // Velocità mondo (+10%)
+  // Velocità: base +10%, e **dopo 300 punti** +30% extra
   let speed = 0.8;
-  const MAX_SPEED = 4.2 * 1.1;      // +10%
+  const MAX_SPEED_BASE = 4.2;
+  const SPEED_MULT_BASE = 1.10;    // +10% globale
+  const EXTRA_AFTER_300 = 1.30;     // +30% dopo 300
   const ACCEL_PER_SEC = 0.04;
   const ACCEL_RAMP_TIME = 90;
   let elapsedRunTime = 0;
-  const SPEED_MULT = 1.1;           // +10% sul targetSpeed
 
   // Sfondo parallax
   let bgOffset = 0;
@@ -365,6 +353,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const ground = cvs.height - 40;
   const airLaneY = ground - 150;
+  const midLaneY = Math.round((ground + airLaneY)/2); // corsia mediana
 
   // Player
   const player = { x:120, y:0, w:44, h:44, vx:0, vy:0, onGround:true };
@@ -451,18 +440,18 @@ document.addEventListener('DOMContentLoaded', () => {
   let controlsInvertUntil = 0;
   function controlsInverted(){ return performance.now()/1000 < controlsInvertUntil; }
 
-  function maybeScheduleEffect(dt, nowSec){
+  function maybeScheduleEffect(dt){
     if(score < 500) return;
     effectTimer += dt;
     if(effectTimer >= nextEffectAt){
       effectTimer = 0;
       nextEffectAt = 8 + Math.random()*6; // ~10s medio
       if(Math.random() < 0.5){
-        // shake
-        shakeTime = 0.8;
+        // shake (DURATA DOPPIA)
+        shakeTime = 1.6;
       } else {
-        // inverti colori
-        invertFilterTime = 1.2;
+        // inverti colori (DURATA DOPPIA)
+        invertFilterTime = 2.4;
         wrap.classList.add('invert');
       }
     }
@@ -477,14 +466,25 @@ document.addEventListener('DOMContentLoaded', () => {
     const w = baseW * scale;
     const ratio = (img && img.naturalWidth) ? (img.naturalHeight/img.naturalWidth) : 1.2;
     const h = w * ratio;
-    const jitterY = (type==='air') ? (Math.random()*12 - 6) : (Math.random()*6 - 3);
-    const y = (type==='ground') ? (ground-h + jitterY) : (airLaneY - h/2 + jitterY);
+
+    let y;
+    if(type==='ground'){
+      const jitterY = Math.random()*6 - 3;
+      y = ground - h + jitterY;
+    } else if(type==='air'){
+      const jitterY = Math.random()*12 - 6;
+      y = airLaneY - h/2 + jitterY;
+    } else { // mid
+      const jitterY = Math.random()*10 - 5;
+      y = midLaneY - h/2 + jitterY;
+    }
+
     const o = {
       x:cvs.width+10, y, w, h, img, type, scale,
       baseX:cvs.width+10, baseY:y,
-      oscA: type==='air' ? (2 + Math.random()*4) : (1 + Math.random()*2), // ampiezza
-      oscT: 1.2 + Math.random()*0.8,              // periodo ~1.2-2.0s
-      oscP: Math.random()*Math.PI*2               // fase
+      oscA: type==='air' ? (2 + Math.random()*4) : (type==='ground' ? (1 + Math.random()*2) : (1.5 + Math.random()*2.5)),
+      oscT: 1.2 + Math.random()*0.8,
+      oscP: Math.random()*Math.PI*2
     };
     obstacles.push(o);
   }
@@ -492,25 +492,38 @@ document.addEventListener('DOMContentLoaded', () => {
   function shuffleArray(a){ for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j]]; } return a; }
 
   function queuePattern(currentScore){
-    // Sempre almeno 2 e GUARANTITI air+ground
-    let minC=2, maxC=2, airBias=0.5;
-    if(currentScore > 600){ minC=4; maxC=4; airBias=0.55; }
-    else if(currentScore > 400){ minC=3; maxC=3; airBias=0.53; }
-    else if(currentScore > 200){ minC=2; maxC=2; airBias=0.5; }
+    // Conta base in funzione del punteggio
+    let minC=2, maxC=2;
+    if(currentScore > 600){ minC=4; maxC=4; }
+    else if(currentScore > 400){ minC=3; maxC=3; }
+    // Pesi per corsie: più in basso, poi metà, poi alto
+    let weights = {ground:0.62, mid:0.23, air:0.15};
+    if(currentScore > 400) weights = {ground:0.58, mid:0.27, air:0.15};
+    if(currentScore > 600) weights = {ground:0.55, mid:0.30, air:0.15};
 
     const count = Math.floor(Math.random()*(maxC-minC+1))+minC;
 
+    // Genera tipi secondo i pesi
+    function pickLane(){
+      const r = Math.random();
+      if(r < weights.ground) return 'ground';
+      if(r < weights.ground + weights.mid) return 'mid';
+      return 'air';
+    }
     let types=[];
-    for(let i=0;i<count;i++) types.push(Math.random() < airBias ? 'air' : 'ground');
-    // forza almeno uno per ciascuna corsia
-    if(!types.includes('air')) types[0]='air';
-    if(!types.includes('ground')) types[types.length-1]='ground';
+    for(let i=0;i<count;i++) types.push(pickLane());
+
+    // Garantisci almeno UN ground
+    if(!types.includes('ground')) types[0] = 'ground';
+
     shuffleArray(types);
 
-    const BASE_GAP = 0.22 + Math.random()*0.1; // un filo più largo per evitare muri
+    // Spaziatura
+    const BASE_GAP = 0.22 + Math.random()*0.1;
     const JITTER = 0.14;
     const startOffset = Math.random()*0.3;
     const scaleBase = 0.9 + Math.min(0.3, currentScore/1000);
+
     types.forEach((t, idx)=>{
       const delay = startOffset + idx*BASE_GAP + (Math.random()*2*JITTER - JITTER);
       const scale = Math.max(0.8, Math.min(1.25, scaleBase + (Math.random()*0.2 - 0.1)));
@@ -518,7 +531,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // Collezionabili (aggiunto 🐞)
+  // Collezionabili (candle, heart, bug)
   const PICKUP_CHANCE = 0.20;
   const PICKUP_COOLDOWN = 4.0;
   let lastPickupTime = -Infinity;
@@ -526,15 +539,17 @@ document.addEventListener('DOMContentLoaded', () => {
   function spawnPickup(){
     const now = performance.now() / 1000;
     if(now - lastPickupTime < PICKUP_COOLDOWN) return false;
-
-    // dopo 500 punti includi anche il bug
     const pool = (score >= 500) ? ['candle','heart','bug'] : ['candle','heart'];
     const type = pool[Math.floor(Math.random()*pool.length)];
-    const lane = Math.random() < 0.5 ? 'air' : 'ground';
+    // Lane per i pickup: privilegia mid/ground per equità
+    const laneR = Math.random();
+    const lane = laneR < 0.5 ? 'ground' : (laneR < 0.8 ? 'mid' : 'air');
     const emoji = type === 'candle' ? '🕯️' : (type === 'heart' ? '❤️' : '🐞');
     const fontSize = 24;
     const w = fontSize, h = fontSize;
-    const y = lane === 'ground' ? (ground - h - 6) : (airLaneY - h/2);
+    let y = ground - h - 6;
+    if(lane==='air') y = airLaneY - h/2;
+    else if(lane==='mid') y = midLaneY - h/2;
 
     pickups.push({ x:cvs.width+10, y, w, h, emoji, type });
     lastPickupTime = now;
@@ -576,7 +591,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const finalScore = Math.floor(score);
     if(cleared){
       overlayBox.style.color = 'var(--ok)';
-      overlayBox.textContent = String(finalScore); // mostra solo il punteggio
+      overlayBox.textContent = String(finalScore); // mostra punteggio finale
       epilogue.style.display = 'block';
     } else {
       overlayBox.style.color = 'var(--err)';
@@ -620,11 +635,15 @@ document.addEventListener('DOMContentLoaded', () => {
     timeSec += delta;
     elapsedRunTime += delta;
 
-    // Velocità mondo (+10% globale)
+    // Velocità base in rampa
     const t = Math.min(1, elapsedRunTime / ACCEL_RAMP_TIME);
     const eased = t*t*(3 - 2*t);
-    const baseTarget = 0.8 + (4.2 - 0.8) * eased;
-    const targetSpeed = baseTarget * SPEED_MULT;
+    const baseTarget = 0.8 + (MAX_SPEED_BASE - 0.8) * eased;
+
+    // Moltiplicatori: +10% globale, +30% extra dopo 300 punti
+    const mult = (score >= 300) ? (SPEED_MULT_BASE * EXTRA_AFTER_300) : SPEED_MULT_BASE;
+    const targetSpeed = baseTarget * mult;
+
     speed += (targetSpeed - speed) * ACCEL_PER_SEC;
 
     // Punteggio e flag clear
@@ -635,16 +654,16 @@ document.addEventListener('DOMContentLoaded', () => {
     if(!cleared && score >= TARGET_SCORE){ cleared = true; }
 
     // Disturbi dopo 500
-    maybeScheduleEffect(delta, timeSec);
+    maybeScheduleEffect(delta);
 
-    // shake & invert timers
+    // timers effetti
     if(invertFilterTime > 0){ invertFilterTime -= delta; if(invertFilterTime <= 0){ wrap.classList.remove('invert'); } }
     if(shakeTime > 0) shakeTime -= delta;
 
     // background (eventuale shake)
     ctx.save();
     if(shakeTime > 0){
-      const s = 2.5; // shake lieve
+      const s = 2.5;
       const ox = (Math.random()*2-1)*s;
       const oy = (Math.random()*2-1)*s;
       ctx.translate(ox, oy);
@@ -655,7 +674,10 @@ document.addEventListener('DOMContentLoaded', () => {
     // piste
     ctx.strokeStyle='rgba(43,255,136,.3)';
     ctx.beginPath(); ctx.moveTo(0,ground+0.5); ctx.lineTo(cvs.width,ground+0.5); ctx.stroke();
-    ctx.setLineDash([6,6]); ctx.beginPath(); ctx.moveTo(0,airLaneY+0.5); ctx.lineTo(cvs.width,airLaneY+0.5); ctx.stroke(); ctx.setLineDash([]);
+    ctx.setLineDash([6,6]);
+    ctx.beginPath(); ctx.moveTo(0,midLaneY+0.5); ctx.lineTo(cvs.width,midLaneY+0.5); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(0,airLaneY+0.5); ctx.lineTo(cvs.width,airLaneY+0.5); ctx.stroke();
+    ctx.setLineDash([]);
 
     // spawn pattern/pickup
     const baseInterval = 2400 - speed*90;
@@ -692,7 +714,7 @@ document.addEventListener('DOMContentLoaded', () => {
       if(px < ox + ow && px + pw > ox && py < oy + oh && py + ph > oy){
         if(p.type === 'candle'){ score += 50; }
         else if(p.type === 'heart'){ if(lives < MAX_LIVES){ lives += 1; renderLives(); } }
-        else if(p.type === 'bug'){ controlsInvertUntil = performance.now()/1000 + 5; } // 5s comandi invertiti
+        else if(p.type === 'bug'){ controlsInvertUntil = performance.now()/1000 + 5; }
         pickups.splice(i,1);
       }
     }
@@ -701,15 +723,16 @@ document.addEventListener('DOMContentLoaded', () => {
     for(let i=obstacles.length-1;i>=0;i--){
       const o=obstacles[i];
       o.baseX -= speed;
-      // oscillazioni
       let drawX = o.baseX;
       let drawY = o.baseY;
       if(score >= 300){
         const phase = (timeSec + o.oscP) * (2*Math.PI / o.oscT);
         if(o.type === 'air'){
-          drawY = o.baseY + Math.sin(phase) * o.oscA;       // su/giu
-        } else {
-          drawX = o.baseX + Math.sin(phase) * (o.oscA*0.8); // avanti/indietro
+          drawY = o.baseY + Math.sin(phase) * o.oscA;             // su/giu
+        } else if(o.type === 'ground'){
+          drawX = o.baseX + Math.sin(phase) * (o.oscA*0.8);       // avanti/indietro
+        } else { // mid
+          drawY = o.baseY + Math.sin(phase) * (o.oscA*0.6);       // piccolo bob
         }
       }
       o.x = drawX; o.y = drawY;
