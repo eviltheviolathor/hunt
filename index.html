@@ -10,54 +10,57 @@
   :root{
     --bg:#050505;
     --fg:#e6e6e6;
-    --muted:#7a7a7a;
+    --muted:#9aa0a6;
     --accent:#2bff88;
     --accent2:#6bffda;
     --card:#0d0d0d;
     --ok:#22c55e;
-    --err:#ff4444;
+    --err:#ff4d4d;
   }
 
-  *{box-sizing:border-box;margin:0;padding:0}
+  *{box-sizing:border-box}
 
   html,body{
     height:100%;
-    width:100%;
-    display:flex;
-    justify-content:center;
-    align-items:center;
-    background:radial-gradient(circle at 50% 20%, #111 0%, #000 80%);
+    margin:0;
+    background:radial-gradient(circle at 50% 15%, #111 0%, #000 80%);
     color:var(--fg);
-    font-family: 'Cinzel Decorative', serif;
-    overflow:hidden;
+    font-family:'Cinzel Decorative', serif;
   }
 
-  .wrap{
-    width:100%;
+  /* CENTRATURA REALE */
+  .page{
+    min-height:100vh;
     max-width:1600px;
+    margin:0 auto;                 /* centra orizzontale */
+    padding:48px 24px 56px;
+    display:flex;
+    flex-direction:column;
+    align-items:center;            /* centra il contenuto nella colonna */
+    justify-content:flex-start;
     text-align:center;
   }
 
   h1{
     font-size:clamp(28px,4vw,48px);
-    margin-bottom:12px;
+    margin:0 0 8px;
     letter-spacing:.08em;
     color:var(--accent);
     text-shadow:0 0 12px var(--accent), 0 0 28px var(--accent2);
   }
-
-  .sub{ color:var(--muted); margin-bottom:28px; font-size:1.2rem; }
+  .sub{ color:var(--muted); margin:0 0 26px; font-size:1.05rem; }
 
   .panel{
     display:grid;
-    grid-template-columns:repeat(4, 1fr);
+    grid-template-columns:repeat(4, minmax(320px, 1fr));
     gap:28px;
-    justify-items:center;
+    width:100%;
+    max-width:1400px;
     padding:24px;
     border-radius:20px;
     background:rgba(20,20,20,0.85);
-    box-shadow: 0 0 40px rgba(43,255,136,.25), inset 0 0 20px rgba(43,255,136,.15);
-    margin:0 auto;
+    box-shadow:0 0 40px rgba(43,255,136,.25), inset 0 0 20px rgba(43,255,136,.15);
+    margin:0 auto;                 /* centra la griglia */
   }
 
   .slot{
@@ -65,13 +68,8 @@
     border:2px solid rgba(43,255,136,.3);
     border-radius:22px;
     padding:18px;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    gap:14px;
+    display:flex; align-items:center; justify-content:center; gap:14px;
     min-height:340px;
-    width:100%;
-    max-width:360px;
     box-shadow:inset 0 0 20px rgba(43,255,136,.15);
   }
 
@@ -80,61 +78,60 @@
     background:rgba(0,0,0,.6);
     display:flex; align-items:center; justify-content:center;
     border:1px solid rgba(43,255,136,.4);
-    box-shadow: 0 0 20px rgba(43,255,136,.15), inset 0 0 15px rgba(43,255,136,.1);
+    box-shadow:0 0 20px rgba(43,255,136,.15), inset 0 0 15px rgba(43,255,136,.1);
+    overflow:hidden;
   }
+  .symbol img{ width:280px; height:280px; object-fit:contain; display:block; }
 
-  .symbol img{
-    width:280px; height:280px; object-fit:contain;
+  .fallback{
+    width:100%; height:100%;
+    display:flex; align-items:center; justify-content:center;
+    color:var(--accent2); font-size:0.95rem; padding:10px; text-wrap:balance;
+    background:rgba(0,0,0,.4);
   }
 
   .arrow{
-    width:60px; height:60px;
-    display:flex; align-items:center; justify-content:center;
-    font-size:32px;
+    width:60px; height:60px; display:flex; align-items:center; justify-content:center;
+    font-size:32px; user-select:none;
     background:rgba(30,30,30,.8);
     border:1px solid rgba(43,255,136,.3);
-    border-radius:12px;
-    cursor:pointer;
-    color:var(--fg);
-    transition: all .2s ease;
+    border-radius:12px; cursor:pointer; color:var(--fg);
+    transition:all .2s ease;
   }
   .arrow:hover{ background:rgba(43,255,136,.15); }
 
-  .action{ margin:28px 0 10px; display:flex; gap:16px; justify-content:center; }
-
+  .action{ margin:26px 0 8px; display:flex; gap:14px; justify-content:center; }
   button{
     appearance:none; border:0; cursor:pointer;
-    border-radius:12px; padding:14px 20px; font-weight:700;
-    background:rgba(30,30,30,.9);
-    color:var(--fg); border:2px solid rgba(43,255,136,.3);
-    font-family:'Cinzel Decorative', serif;
-    font-size:1.1rem;
-    transition:all .2s ease;
+    border-radius:12px; padding:12px 18px; font-weight:700;
+    background:rgba(30,30,30,.9); color:var(--fg); border:2px solid rgba(43,255,136,.3);
+    font-family:'Cinzel Decorative', serif; font-size:1rem; transition:all .2s ease;
   }
   button:hover{ background:rgba(43,255,136,.15); }
 
-  .msg{ min-height:36px; font-size:1.4rem; margin-top:10px; }
-  .success{ color:var(--ok); text-shadow:0 0 10px var(--ok); animation: pop .6s ease; }
+  .msg{ min-height:34px; font-size:1.25rem; margin-top:8px; }
+  .success{ color:var(--ok); text-shadow:0 0 10px var(--ok); }
   .fail{ color:var(--err); text-shadow:0 0 8px var(--err); }
 
-  @keyframes pop { from{ transform:scale(.96); opacity:.4 } to{ transform:scale(1); opacity:1 } }
-
   .footer{
-    margin-top:26px; color:var(--accent2); font-size:1.2rem;
-    text-shadow:0 0 6px rgba(43,255,136,.4);
+    margin-top:24px; color:var(--accent2); font-size:1.1rem;
+    text-shadow:0 0 6px rgba(43,255,136,.35);
   }
 
-  @media (max-width: 1200px){
-    .panel{ grid-template-columns:repeat(2, 1fr); }
+  @media (max-width:1200px){
+    .panel{ grid-template-columns:repeat(2, minmax(320px, 1fr)); }
+  }
+  @media (max-width:680px){
+    .panel{ grid-template-columns:1fr; }
   }
 </style>
 </head>
 <body>
-  <div class="wrap">
+  <main class="page">
     <h1>Combinazione di Simboli</h1>
     <p class="sub">Allinea i quattro simboli corretti per risvegliare l'oscuro portale.</p>
 
-    <div class="panel" id="panel"></div>
+    <section class="panel" id="panel"></section>
 
     <div class="action">
       <button id="shuffle">Mescola</button>
@@ -143,16 +140,20 @@
     <div id="message" class="msg"></div>
 
     <div class="footer" id="hintBox"></div>
-  </div>
+  </main>
 
 <script>
-// =====================
-// CONFIGURAZIONE
-// =====================
-// 12 immagini numerate 1.png ... 12.png dentro /media
+/* ========== CONFIGURAZIONE ========== */
+/* Le 12 immagini devono essere in:  /media/1.png ... /media/12.png
+   ATTENZIONE a:
+   - nome esatto (maiuscole/minuscole su GitHub Pages contano)
+   - estensione .png davvero (non .PNG o .webp)
+   - cartella realmente 'media' nella root del sito
+*/
 const SYMBOLS = Array.from({length:12}, (_,i) => {
   const num = i+1;
-  return { id: String(num), view: `<img src="media/${num}.png" alt="simbolo ${num}">` };
+  const src = `./media/${num}.png`; // path relativo alla pagina
+  return { id: String(num), src };
 });
 
 // Sequenza corretta
@@ -165,9 +166,7 @@ const HINTS = [
   "Una volta ho sentito la storia di una \"casa del dolore\", forse si parlava di qualcosa di interessante?"
 ];
 
-// =====================
-// LOGICA
-// =====================
+/* ========== LOGICA ========== */
 const panel   = document.getElementById('panel');
 const message = document.getElementById('message');
 const hintBox = document.getElementById('hintBox');
@@ -188,6 +187,7 @@ function createSlot(i){
 
   wrap.appendChild(left); wrap.appendChild(sym); wrap.appendChild(right);
 
+  // stato iniziale random
   state[i] = Math.floor(Math.random() * SYMBOLS.length);
   renderSymbol(sym, state[i]);
 
@@ -203,7 +203,21 @@ function createSlot(i){
   return wrap;
 }
 
-function renderSymbol(el, idx){ el.innerHTML = SYMBOLS[idx].view; }
+function renderSymbol(el, idx){
+  const {src} = SYMBOLS[idx];
+  el.innerHTML = ''; // pulisci
+  const img = document.createElement('img');
+  img.src = src;
+  img.alt = `simbolo ${idx+1}`;
+  img.onerror = () => {               // Fallback di debug se l'immagine manca
+    const fb = document.createElement('div');
+    fb.className = 'fallback';
+    fb.textContent = 'MANCANTE: ' + src;
+    el.innerHTML = '';
+    el.appendChild(fb);
+  };
+  el.appendChild(img);
+}
 
 function build(){
   panel.innerHTML=''; state = [];
