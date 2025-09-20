@@ -10,32 +10,34 @@
     --accent:#ff7a18; --accent2:#c679ff;
     --card:#0a0a0a; --ok:#22c55e; --err:#ef4444;
   }
-  *{box-sizing:border-box} html,body{height:100%}
+  *{box-sizing:border-box}
+  html,body{height:100%}
   body{
     margin:0; background:var(--bg); color:var(--fg);
     font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial;
     display:flex; align-items:center; justify-content:center;
   }
-  .wrap{ width:min(1024px, 92vw); text-align:center; }
+  .wrap{ width:min(1200px, 94vw); text-align:center; }
   h1{ font-size:clamp(20px,3vw,28px); margin:0 0 6px; letter-spacing:.04em; }
   .sub{ color:var(--muted); margin:0 0 20px; }
   .panel{
-    display:grid; grid-template-columns:repeat(4, 1fr); gap:14px;
-    padding:16px; border-radius:18px; background:linear-gradient(180deg, #0d0d0d, #000);
+    display:grid; grid-template-columns:repeat(4, 1fr); gap:16px;
+    padding:18px; border-radius:18px; background:linear-gradient(180deg, #0d0d0d, #000);
     box-shadow: 0 20px 60px rgba(0,0,0,.55), inset 0 1px 0 rgba(255,255,255,.04);
   }
   .slot{
-    background:radial-gradient(120px 120px at 50% 30%, rgba(255,122,24,.08), transparent 60%), var(--card);
+    background:radial-gradient(180px 180px at 50% 30%, rgba(255,122,24,.08), transparent 60%), var(--card);
     border:1px solid #1b1b1b; border-radius:16px; padding:14px;
-    display:flex; align-items:center; justify-content:center; gap:10px; position:relative; min-height:140px;
+    display:flex; align-items:center; justify-content:center; gap:12px;
+    position:relative; min-height:220px;
   }
   .symbol{
-    width:92px; height:92px; border-radius:14px;
+    width:180px; height:180px; border-radius:14px;
     background:#0d0d0d; display:flex; align-items:center; justify-content:center;
+    font-size:110px; font-weight:800; letter-spacing:.06em;
     border:1px solid #1f1f1f; box-shadow: inset 0 2px 0 rgba(255,255,255,.04);
   }
-  .symbol img { width:72px; height:72px; object-fit:contain; }
-  .arrow{ width:40px; height:40px; display:flex; align-items:center; justify-content:center; font-size:20px; }
+  .arrow{ width:44px; height:44px; display:flex; align-items:center; justify-content:center; font-size:20px; }
   button{
     appearance:none; border:0; cursor:pointer; border-radius:12px; padding:10px 12px; font-weight:700;
     background:#121212; color:var(--fg); border:1px solid #1f1f1f;
@@ -46,8 +48,11 @@
   .success{ color:var(--ok); font-weight:800; animation: pop .6s ease; }
   .fail{ color:var(--err); font-weight:700; }
   @keyframes pop { from{ transform:scale(.96); opacity:.4 } to{ transform:scale(1); opacity:1 } }
-  .footer{ margin-top:18px; color:#7a7a7a; font-size:.92rem }
+  .footer{ margin-top:18px; color:#9aa0a6; font-size:.95rem }
   .tiny{ font-size:.85rem; color:#8d8d8d }
+  @media (max-width: 900px){
+    .panel{ grid-template-columns:repeat(2, 1fr); }
+  }
 </style>
 </head>
 <body>
@@ -55,55 +60,73 @@
     <h1>Combinazione di Simboli</h1>
     <p class="sub">Scegli i 4 simboli nell'ordine corretto per aprire il portale.</p>
 
-    <div class="panel" id="panel"></div>
+    <div class="panel" id="panel"><!-- slot creati via JS --></div>
 
     <div class="action">
       <button id="shuffle">Mescola</button>
       <button id="check">Verifica</button>
     </div>
     <div id="message" class="msg"></div>
-    <div class="footer tiny">Suggerimento: i simboli sono le immagini numerate da 1 a 12.</div>
+
+    <div class="footer" id="hintBox">Suggerimento…</div>
   </div>
 
 <script>
 /* =====================
    CONFIGURAZIONE
    ===================== */
+// Simboli disponibili (numeri)
+const SYMBOLS = [
+  { id: '1', view: '1' },
+  { id: '2', view: '2' },
+  { id: '3', view: '3' },
+  { id: '4', view: '4' },
+  { id: '5', view: '5' }
+];
 
-// Definiamo i 12 simboli come immagini (1.png … 12.png dentro /media/)
-const SYMBOLS = [];
-for (let i = 1; i <= 12; i++) {
-  SYMBOLS.push({
-    id: String(i),
-    view: `<img src="media/${i}.png" alt="simbolo ${i}" style="width:72px;height:72px">`
-  });
-}
-
-// Sequenza corretta: 1,2,3,4
+// Sequenza corretta
 const TARGET = ['1','2','3','4'];
+
+// Numero di slot
 const SLOTS = 4;
 
-// =====================
+// Suggerimenti random
+const HINTS = [
+  "Spesso gli oggetti dei rituali si nascondono nelle stanze più buie.",
+  "Le scope delle streghe nascondono sempre qualcosa.",
+  "Una volta ho sentito la storia di una \"casa del dolore\", forse si parlava di qualcosa di interessante?"
+];
 
+/* =====================
+   LOGICA
+   ===================== */
 const panel   = document.getElementById('panel');
 const message = document.getElementById('message');
-let state = [];
+const hintBox = document.getElementById('hintBox');
+let state = []; // indice di SYMBOLS per ogni slot
 
 function createSlot(i){
   const wrap = document.createElement('div');
   wrap.className = 'slot';
 
   const left = document.createElement('button');
-  left.className = 'arrow'; left.textContent = '◀';
+  left.className = 'arrow';
+  left.setAttribute('aria-label','precedente');
+  left.textContent = '◀';
 
   const sym = document.createElement('div');
   sym.className = 'symbol';
+  sym.setAttribute('role','img');
+  sym.setAttribute('aria-live','polite');
 
   const right = document.createElement('button');
-  right.className = 'arrow'; right.textContent = '▶';
+  right.className = 'arrow';
+  right.setAttribute('aria-label','successivo');
+  right.textContent = '▶';
 
   wrap.appendChild(left); wrap.appendChild(sym); wrap.appendChild(right);
 
+  // stato iniziale random
   state[i] = Math.floor(Math.random() * SYMBOLS.length);
   renderSymbol(sym, state[i]);
 
@@ -138,15 +161,38 @@ function check(){
   if(ok){
     message.className = 'msg success';
     message.textContent = 'bravo';
+    confetti();
   } else {
     message.className = 'msg fail';
     message.textContent = 'sbagliato';
   }
 }
 
+// mini-confetti senza librerie
+function confetti(){
+  const n = 60;
+  for (let i=0;i<n;i++){
+    const p = document.createElement('div');
+    const size = 4 + Math.random()*6;
+    p.style.position='fixed'; p.style.left=(Math.random()*100)+'vw'; p.style.top='-10px';
+    p.style.width=size+'px'; p.style.height=size+'px';
+    p.style.background = Math.random()>.5 ? 'var(--accent)' : 'var(--accent2)';
+    p.style.borderRadius='2px'; p.style.opacity=.9; p.style.zIndex=9999;
+    document.body.appendChild(p);
+    const x = (Math.random()*2 -1) * 60;
+    const dur = 1500 + Math.random()*1200;
+    p.animate([{transform:`translate(${x}px, 0)`},{transform:`translate(${x*1.2}px, 95vh)`}],
+              {duration:dur, easing:'cubic-bezier(.2,.7,.2,1)'}).onfinish = ()=> p.remove();
+  }
+}
+
+// Avvio
 document.getElementById('shuffle').addEventListener('click', shuffle);
 document.getElementById('check').addEventListener('click', check);
 build();
+
+// Mostra un suggerimento casuale
+hintBox.textContent = "Suggerimento: " + HINTS[Math.floor(Math.random()*HINTS.length)];
 </script>
 </body>
 </html>
