@@ -9,13 +9,13 @@
 
   :root{
     --bg:#050505; --fg:#e6e6e6; --muted:#9aa0a6;
-    --accent:#2bff88; --accent2:#6bffda;             /* verde ectoplasma */
-    --pumpkin:#ff7a18;                                /* arancione zucca */
-    --stone:#5de6b3;                                  /* lapidi “spettrali” */
+    --accent:#2bff88; --accent2:#6bffda;       /* verde ectoplasma */
+    --pumpkin:#ff7a18;                          /* arancione zucca */
+    --stone:#5de6b3;                            /* lapidi spettrali */
     --card:#0d0d0d; --ok:#22c55e; --err:#ff4d4d;
   }
-  *{box-sizing:border-box}
 
+  *{box-sizing:border-box}
   html,body{
     margin:0;
     background:radial-gradient(circle at 50% 15%, #111 0%, #000 80%);
@@ -29,12 +29,18 @@
     display:flex; flex-direction:column; align-items:center; text-align:center;
   }
 
-  .hero{width:100%; max-width:min(1000px, 96vw); margin:0 auto clamp(10px,2vw,18px)}
+  /* HERO: dimezzata */
+  .hero{width:100%; max-width:min(500px, 50vw); margin:0 auto clamp(10px,2vw,18px)}
   .hero img{width:100%; height:auto; display:block; border-radius:10px}
   .hero-fallback{width:100%; padding:clamp(16px,2vw,28px); border:2px dashed rgba(43,255,136,.35); border-radius:10px; color:var(--accent2)}
 
-  h1{font-size:clamp(24px,5vw,42px); margin:clamp(8px,1.5vw,12px) 0; color:var(--accent);
-     text-shadow:0 0 12px var(--accent), 0 0 28px var(--accent2); letter-spacing:.06em;}
+  h1{
+    font-size:clamp(24px,5vw,42px);
+    margin:clamp(8px,1.5vw,12px) 0;
+    color:var(--accent);
+    text-shadow:0 0 12px var(--accent), 0 0 28px var(--accent2);
+    letter-spacing:.06em;
+  }
   .sub{color:var(--muted); margin:0 0 clamp(12px,2vw,18px); font-size:clamp(14px,2vw,18px)}
 
   /* Pannello combinazione */
@@ -72,10 +78,23 @@
   .footer{margin-top:clamp(12px,2vw,18px); color:var(--accent2); font-size:.95rem}
 
   /* RITUALE */
-  #rituale{display:none; width:100%; max-width:min(900px, 96vw); margin:clamp(16px,2.5vw,24px) auto 0}
-  .rituale-text{margin:12px auto 20px; line-height:1.45; color:var(--fg); font-size:clamp(14px,2vw,18px)}
+  #rituale{display:none; width:100%; max-width:min(1000px, 96vw); margin:clamp(16px,2.5vw,24px) auto 0}
+  .rituale-text{margin:12px auto 8px; line-height:1.45; color:var(--fg); font-size:clamp(14px,2vw,18px)}
+  .rit-title{font-size:clamp(22px,4vw,36px); margin:8px 0 12px; color:var(--accent);
+             text-shadow:0 0 10px var(--accent), 0 0 24px var(--accent2); letter-spacing:.08em;}
 
-  .pentacolo{position:relative; width:min(90vw,600px); height:min(90vw,600px); margin:0 auto 30px}
+  /* wrapper per GIF + pentacolo */
+  .ritual-wrap{
+    display:flex; align-items:center; justify-content:center; gap:16px;
+    margin-top:8px;
+  }
+  .rit-gif{
+    width:140px; height:140px; object-fit:cover; border-radius:8px;
+    box-shadow:0 0 16px rgba(43,255,136,.25);
+  }
+  @media (max-width:900px){ .rit-gif{display:none;} }
+
+  .pentacolo{position:relative; width:min(90vw,600px); height:min(90vw,600px); margin:0 auto 24px}
   .pentacolo svg{transform:rotate(180deg)} /* rovesciato */
 
   /* campi NON sovrapposti: uno sopra, due sotto */
@@ -107,7 +126,7 @@
 </head>
 <body>
   <main class="page">
-    <!-- Banner -->
+    <!-- Banner ridotto -->
     <div class="hero" id="heroBox"></div>
 
     <h1>Combinazione di Simboli</h1>
@@ -125,20 +144,26 @@
     <!-- RITUALE -->
     <section id="rituale">
       <p class="rituale-text" id="ritText"></p>
+      <div class="rit-title">Inizia il Rituale</div>
 
-      <div class="pentacolo">
-        <svg viewBox="0 0 100 100" width="100%" height="100%" aria-hidden="true"
-             style="position:absolute;left:0;top:0;filter:drop-shadow(0 0 10px rgba(43,255,136,.35));">
-          <circle cx="50" cy="50" r="45" fill="none" stroke="rgba(43,255,136,.35)" stroke-width="2"/>
-          <polygon points="50,6 61,40 96,40 67,60 78,94 50,73 22,94 33,60 4,40 39,40"
-                   fill="none" stroke="rgba(43,255,136,.55)" stroke-width="2"/>
-        </svg>
-        <!-- Campi fuori dal cerchio -->
-        <div class="rit-field rf-top"><input id="f1" type="text" placeholder="Ingrediente I"></div>
-        <div class="rit-field rf-left"><input id="f2" type="text" placeholder="Ingrediente II"></div>
-        <div class="rit-field rf-right"><input id="f3" type="text" placeholder="Ingrediente III"></div>
-        <button class="rit-btn" id="completeBtn">Completa</button>
+      <div class="ritual-wrap">
+        <img class="rit-gif" src="https://media1.giphy.com/media/v1.Y2lkPTc5MGI3NjExeHlhOXY3M3hsb3cxdnlkbDRsM3M3c2tpNHA2ejFoaHFudzE4ZDlwZyZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/9zOiTQ7RPxU7C/giphy.gif" alt="fuoco sinistro">
+        <div class="pentacolo">
+          <svg viewBox="0 0 100 100" width="100%" height="100%" aria-hidden="true"
+               style="position:absolute;left:0;top:0;filter:drop-shadow(0 0 10px rgba(43,255,136,.35));">
+            <circle cx="50" cy="50" r="45" fill="none" stroke="rgba(43,255,136,.35)" stroke-width="2"/>
+            <polygon points="50,6 61,40 96,40 67,60 78,94 50,73 22,94 33,60 4,40 39,40"
+                     fill="none" stroke="rgba(43,255,136,.55)" stroke-width="2"/>
+          </svg>
+          <!-- Campi fuori dal cerchio -->
+          <div class="rit-field rf-top"><input id="f1" type="text" placeholder="Ingrediente I"></div>
+          <div class="rit-field rf-left"><input id="f2" type="text" placeholder="Ingrediente II"></div>
+          <div class="rit-field rf-right"><input id="f3" type="text" placeholder="Ingrediente III"></div>
+          <button class="rit-btn" id="completeBtn">Completa</button>
+        </div>
+        <img class="rit-gif" src="https://media1.giphy.com/media/v1.Y2lkPTc5MGI3NjExeHlhOXY3M3hsb3cxdnlkbDRsM3M3c2tpNHA2ejFoaHFudzE4ZDlwZyZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/9zOiTQ7RPxU7C/giphy.gif" alt="fuoco destro">
       </div>
+
       <div id="ritMsg" class="rit-msg"></div>
     </section>
 
@@ -157,8 +182,6 @@
         <button id="restartGame" style="display:none">Riprova</button>
       </div>
     </section>
-
-    <section id="nextStep" style="display:none; margin-top:22px;"></section>
   </main>
 
 <script>
@@ -174,7 +197,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const SYMBOLS = Array.from({length:12}, (_,i) => ({ id:String(i+1), src:`./media/${i+1}.png` }));
   const TARGET = atob("MSwyLDMsNA==").split(","); // "1,2,3,4"
 
-  /* Suggerimento */
+  /* Suggerimento casuale */
   const HINTS = [
     "Spesso gli oggetti dei rituali si nascondono nelle stanze più buie.",
     "Le scope delle streghe nascondono sempre qualcosa.",
@@ -227,7 +250,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if(ok){
       message.className='msg success'; message.textContent='';
       if(!ritualeShown){
-        ritText.textContent =
+        ritText.innerHTML =
           "Bene, molto bene. Quindi Herr Knock ti ha insegnato molto. Per procedere con il rituale è fondamentale trovare i tre ingredienti per Evocare il Principe delle Tenebre. Credo che tu possa trovarli all'interno del server, ma non sarà facile.";
         rituale.style.display='block';
         rituale.scrollIntoView({behavior:'smooth'});
@@ -251,7 +274,8 @@ document.addEventListener("DOMContentLoaded", () => {
   };
   const okKnife = (s)=>{
     const v = norm(s);
-    const rust = v.includes('arrugginito') || v.includes('arrugginita') || v.includes('ossidato') || v.includes('ossidata') || v.includes('ruggine');
+    const rust = v.includes('arrugginito') || v.includes('arrugginita')
+              || v.includes('ossidato') || v.includes('ossidata') || v.includes('ruggine');
     return v.includes('coltello') && rust && v.includes('simbolo') && v.includes('bestia');
   };
   const okHair = (s)=>{
@@ -262,7 +286,7 @@ document.addEventListener("DOMContentLoaded", () => {
     return hasPeli && pubici && v.includes('zombie') && femmina;
   };
 
-  const submitRitual = ()=>{
+  function submitRitual(){
     const ok = okCandle(document.getElementById('f1').value) &&
                okKnife (document.getElementById('f2').value) &&
                okHair  (document.getElementById('f3').value);
@@ -277,13 +301,14 @@ document.addEventListener("DOMContentLoaded", () => {
       box.className='rit-msg fail';
       box.textContent='La formula non risponde. Forse hai sbagliato gli ingredienti...';
     }
-  };
+  }
 
   document.getElementById('completeBtn').onclick = submitRitual;
-  // Invio da tastiera
   ['f1','f2','f3'].forEach(id=>{
     document.getElementById(id).addEventListener('keydown', e=>{
       if(e.key==='Enter'){ submitRitual(); }
+      // Non rubare la SPACE/UP quando si scrive negli input
+      e.stopPropagation();
     });
   });
 
@@ -301,70 +326,54 @@ document.addEventListener("DOMContentLoaded", () => {
   const player = { x: 80, y: ground-32, w: 36, h: 36, vy: 0, onGround: true };
   const obstacles = [];
 
-  function spawnObstacle(){
-    const w = 26 + Math.random()*18;
-    const h = 40 + Math.random()*60;
-    obstacles.push({ x:cvs.width+10, y:ground-h, w, h });
-  }
+  function spawnObstacle(){ const w=26+Math.random()*18, h=40+Math.random()*60; obstacles.push({ x:cvs.width+10, y:ground-h, w, h }); }
   function drawPumpkin(p){
-    ctx.fillStyle = 'var(--pumpkin)';
-    ctx.beginPath(); ctx.ellipse(p.x + p.w/2, p.y + p.h/2, p.w/2, p.h/2, 0, 0, Math.PI*2); ctx.fill();
-    ctx.fillStyle = '#7a5c2e'; ctx.fillRect(p.x + p.w/2 - 3, p.y - 6, 6, 8);
+    ctx.fillStyle = 'var(--pumpkin)'; ctx.beginPath();
+    ctx.ellipse(p.x+p.w/2, p.y+p.h/2, p.w/2, p.h/2, 0, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#7a5c2e'; ctx.fillRect(p.x+p.w/2-3, p.y-6, 6, 8);
     ctx.fillStyle = '#000';
     ctx.beginPath(); ctx.moveTo(p.x+10, p.y+14); ctx.lineTo(p.x+18, p.y+8); ctx.lineTo(p.x+22, p.y+18); ctx.closePath(); ctx.fill();
     ctx.beginPath(); ctx.moveTo(p.x+p.w-10, p.y+14); ctx.lineTo(p.x+p.w-18, p.y+8); ctx.lineTo(p.x+p.w-22, p.y+18); ctx.closePath(); ctx.fill();
-    ctx.beginPath();
-    ctx.moveTo(p.x+10, p.y+p.h-12);
-    ctx.lineTo(p.x+16, p.y+p.h-8);
-    ctx.lineTo(p.x+22, p.y+p.h-12);
-    ctx.lineTo(p.x+28, p.y+p.h-8);
-    ctx.lineTo(p.x+34, p.y+p.h-12);
-    ctx.lineTo(p.x+40, p.y+p.h-8);
-    ctx.lineTo(p.x+46, p.y+p.h-12);
-    ctx.fill();
+    ctx.beginPath(); ctx.moveTo(p.x+10, p.y+p.h-12); ctx.lineTo(p.x+16, p.y+p.h-8); ctx.lineTo(p.x+22, p.y+p.h-12);
+    ctx.lineTo(p.x+28, p.y+p.h-8); ctx.lineTo(p.x+34, p.y+p.h-12); ctx.lineTo(p.x+40, p.y+p.h-8); ctx.lineTo(p.x+46, p.y+p.h-12); ctx.fill();
   }
   function drawGravestone(o){
-    ctx.fillStyle = 'var(--stone)';
-    ctx.fillRect(o.x, o.y + o.h - 8, o.w, 8);
-    ctx.beginPath();
-    ctx.moveTo(o.x, o.y + o.h - 8);
-    ctx.lineTo(o.x, o.y + 12);
-    ctx.quadraticCurveTo(o.x + o.w/2, o.y - 10, o.x + o.w, o.y + 12);
-    ctx.lineTo(o.x + o.w, o.y + o.h - 8);
-    ctx.closePath();
-    ctx.fill();
+    ctx.fillStyle = 'var(--stone)'; ctx.fillRect(o.x, o.y+o.h-8, o.w, 8);
+    ctx.beginPath(); ctx.moveTo(o.x, o.y+o.h-8); ctx.lineTo(o.x, o.y+12);
+    ctx.quadraticCurveTo(o.x+o.w/2, o.y-10, o.x+o.w, o.y+12);
+    ctx.lineTo(o.x+o.w, o.y+o.h-8); ctx.closePath(); ctx.fill();
   }
-  function resetGame(){
-    running=false; gameOver=false; score=0; speed=6;
-    obstacles.length=0; player.y = ground-32; player.vy=0; player.onGround=true;
-    scoreEl.textContent = '0';
-  }
-  function jump(){
-    if(!running || gameOver) return;
-    if(player.onGround){ player.vy = -12.5; player.onGround = false; }
-  }
+  function resetGame(){ running=false; gameOver=false; score=0; speed=6; obstacles.length=0; player.y=ground-32; player.vy=0; player.onGround=true; scoreEl.textContent='0'; }
+  function jump(){ if(!running||gameOver) return; if(player.onGround){ player.vy=-12.5; player.onGround=false; } }
+
   function loop(ts){
     if(!running) return;
     ctx.clearRect(0,0,cvs.width,cvs.height);
-    ctx.strokeStyle = 'rgba(43,255,136,.3)'; ctx.beginPath(); ctx.moveTo(0, ground+0.5); ctx.lineTo(cvs.width, ground+0.5); ctx.stroke();
-    if(ts - lastSpawn > 1300){ spawnObstacle(); lastSpawn = ts; if(speed < 10) speed += 0.05; }
+    ctx.strokeStyle='rgba(43,255,136,.3)'; ctx.beginPath(); ctx.moveTo(0,ground+0.5); ctx.lineTo(cvs.width,ground+0.5); ctx.stroke();
+    if(ts-lastSpawn>1300){ spawnObstacle(); lastSpawn=ts; if(speed<10) speed+=0.05; }
     for(let i=obstacles.length-1;i>=0;i--){
-      const o = obstacles[i]; o.x -= speed; drawGravestone(o);
-      if(o.x + o.w < 0) obstacles.splice(i,1);
-      if(player.x < o.x + o.w && player.x + player.w > o.x && player.y < o.y + o.h && player.y + player.h > o.y){
-        gameOver = true; running = false; restartBtn.style.display = 'inline-block';
-      }
+      const o=obstacles[i]; o.x-=speed; drawGravestone(o);
+      if(o.x+o.w<0) obstacles.splice(i,1);
+      if(player.x<o.x+o.w && player.x+player.w>o.x && player.y<o.y+o.h && player.y+player.h>o.y){ gameOver=true; running=false; restartBtn.style.display='inline-block'; }
     }
-    player.vy += 0.7; player.y += player.vy;
-    if(player.y + player.h >= ground){ player.y = ground - player.h; player.vy = 0; player.onGround = true; }
+    player.vy+=0.7; player.y+=player.vy;
+    if(player.y+player.h>=ground){ player.y=ground-player.h; player.vy=0; player.onGround=true; }
     drawPumpkin(player);
-    score += 0.1; scoreEl.textContent = Math.floor(score);
+    score+=0.1; scoreEl.textContent=Math.floor(score);
     requestAnimationFrame(loop);
   }
-  window.addEventListener('keydown', (e)=>{ if(e.code==='Space' || e.code==='ArrowUp'){ e.preventDefault(); jump(); } });
+
+  // Non catturare SPACE/UP quando l'utente scrive negli input
+  window.addEventListener('keydown', (e)=>{
+    const tag = document.activeElement && document.activeElement.tagName;
+    const typing = tag === 'INPUT' || tag === 'TEXTAREA';
+    if(typing) return; // lascia passare gli spazi negli input
+    if(e.code==='Space' || e.code==='ArrowUp'){ e.preventDefault(); jump(); }
+  });
   cvs.addEventListener('pointerdown', jump);
-  document.getElementById('startGame').onclick = ()=>{ if(!running && !gameOver){ running = true; restartBtn.style.display='none'; lastSpawn=performance.now(); requestAnimationFrame(loop);} };
-  document.getElementById('restartGame').onclick= ()=>{ resetGame(); running = true; this?.style && (this.style.display='none'); lastSpawn=performance.now(); requestAnimationFrame(loop); };
+
+  document.getElementById('startGame').onclick = ()=>{ if(!running && !gameOver){ running=true; restartBtn.style.display='none'; lastSpawn=performance.now(); requestAnimationFrame(loop);} };
+  document.getElementById('restartGame').onclick= ()=>{ resetGame(); running=true; restartBtn.style.display='none'; lastSpawn=performance.now(); requestAnimationFrame(loop); };
 });
 </script>
 </body>
