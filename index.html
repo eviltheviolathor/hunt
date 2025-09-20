@@ -127,7 +127,7 @@
   @keyframes bl { from{opacity:1} to{opacity:.35} }
 </style>
 </head>
-<body><h1>diominchia2</h1>
+<body><h1>diominchia09</h1>
   <main class="page">
     <!-- HERO -->
     <div class="hero" id="heroBox"></div>
@@ -275,7 +275,7 @@ document.addEventListener('DOMContentLoaded', () => {
   ;[f1,f2,f3].forEach(el=>el.addEventListener('keydown',e=>{ if(e.key==='Enter') submitRitual(); e.stopPropagation(); }));
 
   /* =========================
-     MINIGIOCO — Pumpkin Runner (volo fix + spawn random sfalsati + overlay)
+     MINIGIOCO — Pumpkin Runner (cap volo + continua dopo 666 + pattern vari)
      ========================= */
   const TARGET_SCORE = 666;
 
@@ -308,6 +308,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Stato di gioco
   let running=false, gameOver=false, score=0, lastSpawn=0, lastTs=null;
+  let cleared=false; // ha raggiunto >=666 almeno una volta in questa run?
 
   // Velocità mondo (già approvata)
   let speed = 0.8;
@@ -328,9 +329,9 @@ document.addEventListener('DOMContentLoaded', () => {
   player.y = ground - player.h;
 
   // Oggetti
-  const obstacles=[];   // {x,y,w,h,img,type:'ground'|'air'}
+  const obstacles=[];   // {x,y,w,h,img,type:'ground'|'air',scale}
   const pickups=[];     // {x,y,type:'candle'|'heart', w,h, emoji}
-  const spawnQueue=[];  // {type, delay}
+  const spawnQueue=[];  // {type, delay, scale}
 
   // Vite
   const MAX_LIVES = 3;
@@ -348,7 +349,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // Fisica salto + movimento + volo
-  const GRAVITY = 0.52;            // per-frame
+  const GRAVITY = 0.52;
   const BASE_JUMP_VY = -11.0;
   const SHORT_CUT_VY = -3.0;
   const COYOTE_TIME = 0.14;
@@ -365,8 +366,9 @@ document.addEventListener('DOMContentLoaded', () => {
   let flightEnergy = MAX_FLIGHT_ENERGY;
   const FLIGHT_DRAIN = 0.6;        // /s mentre voli
   const FLIGHT_RECHARGE = 0.18;    // /s ricarica lenta
-  const FLIGHT_BOOST = 0.70;       // spinta per-frame (compensa gravità 0.52)
-  const FLIGHT_CLIMB_CAP = -4.2;   // velocità massima di salita (più negativo = più su)
+  const FLIGHT_BOOST = 0.70;       // spinta per-frame (compensa gravità)
+  const FLIGHT_CLIMB_CAP = -4.2;   // massimo rate di salita
+  const FLIGHT_MIN_Y = (airLaneY - 10) - 44; // top: poco sopra la corsia alta (10px di margine) considerando h≈44
   function updateChargeBar(){
     const pct = Math.round((flightEnergy / MAX_FLIGHT_ENERGY)*100);
     chargeFill.style.width = Math.max(0, Math.min(100, pct)) + '%';
@@ -404,39 +406,55 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  // Spawner
-  function spawnObstacleOfType(type){
+  /* ---------- SPAWN ---------- */
+
+  function drawImage(img, x,y,w,h){ if(img && img.complete && img.naturalWidth) ctx.drawImage(img,x,y,w,h); }
+
+  function spawnObstacleNow(type, scale=1){
     const img = monsterImgs[Math.floor(Math.random()*monsterImgs.length)];
-    const w = 46 + Math.random()*10;
+    // scala dimensioni
+    const baseW = 46 + Math.random()*10;
+    const w = baseW * scale;
     const ratio = (img && img.naturalWidth) ? (img.naturalHeight/img.naturalWidth) : 1.2;
     const h = w * ratio;
-    const y = (type==='ground') ? (ground-h) : (airLaneY - h/2);
-    obstacles.push({ x:cvs.width+10, y, w, h, img, type });
+    // micro jitter verticale per non allineare pixel-perfect
+    const jitterY = (type==='air') ? (Math.random()*12 - 6) : (Math.random()*6 - 3);
+    const y = (type==='ground') ? (ground-h + jitterY) : (airLaneY - h/2 + jitterY);
+    obstacles.push({ x:cvs.width+10, y, w, h, img, type, scale });
   }
 
   function shuffleArray(a){ for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } return a; }
 
   function queuePattern(currentScore){
-    // Quanti?
-    let counts = { air:0, ground:0 };
-    if(currentScore > 600){ counts = {air:2, ground:2}; }
-    else if(currentScore > 400){ counts = {air:2, ground:1}; }
-    else if(currentScore > 200){ counts = {air:1, ground:1}; }
-    else { counts = {air: (Math.random()<0.5?1:0), ground: (Math.random()<0.5?1:0)}; if(counts.air===0 && counts.ground===0) counts.ground=1; }
+    // Scegli conteggio in base alla difficoltà, con varianza
+    let minC=1, maxC=1, airBias=0.5;
+    if(currentScore > 600){ minC=3; maxC=4; airBias=0.6; }
+    else if(currentScore > 400){ minC=3; maxC=3; airBias=0.55; }
+    else if(currentScore > 200){ minC=2; maxC=2; airBias=0.5; }
 
-    // Crea lista tipi e randomizza ordine
-    const types = [];
-    for(let i=0;i<counts.air;i++) types.push('air');
-    for(let i=0;i<counts.ground;i++) types.push('ground');
+    const count = Math.floor(Math.random()*(maxC-minC+1))+minC;
+
+    // Random mix tipi: garantisci almeno uno ground e uno air se count>=2
+    const types=[];
+    for(let i=0;i<count;i++){
+      types.push(Math.random() < airBias ? 'air' : 'ground');
+    }
+    if(count>=2){
+      if(!types.includes('air')) types[0]='air';
+      if(!types.includes('ground')) types[types.length-1]='ground';
+    }
     shuffleArray(types);
 
-    // Ritardi sfalsati casuali
-    const BASE_GAP = 0.18;
-    const JITTER = 0.10; // ±100ms
-    const startOffset = Math.random()*0.20; // 0–200ms prima del primo spawn
+    // Ritardi sfalsati con jitter + startOffset casuale
+    const BASE_GAP = 0.18 + Math.random()*0.08; // 0.18–0.26
+    const JITTER = 0.12;                        // ±120ms
+    const startOffset = Math.random()*0.28;     // 0–280ms
+    // Scale nemici: 0.9–1.2 (più avanti partita => leggermente più grandi)
+    const scaleBase = 0.9 + Math.min(0.3, currentScore/1000); // 0.9–1.2
     types.forEach((t, idx)=>{
       const delay = startOffset + idx*BASE_GAP + (Math.random()*2*JITTER - JITTER);
-      spawnQueue.push({type:t, delay: Math.max(0, delay)});
+      const scale = scaleBase + (Math.random()*0.2 - 0.1);
+      spawnQueue.push({type:t, delay: Math.max(0, delay), scale: Math.max(0.8, Math.min(1.25, scale))});
     });
   }
 
@@ -467,9 +485,48 @@ document.addEventListener('DOMContentLoaded', () => {
     ctx.fillText(p.emoji, p.x, p.y);
   }
 
-  function drawImage(img, x,y,w,h){ if(img && img.complete && img.naturalWidth) ctx.drawImage(img,x,y,w,h); }
+  /* ---------- RESET & END ---------- */
 
-  // Background
+  function resetGame(){
+    running=false; gameOver=false; score=0; lastTs=null; lastSpawn=0; cleared=false;
+    overlay.style.display='none'; overlayBox.textContent='';
+    obstacles.length=0; pickups.length=0; spawnQueue.length=0;
+
+    speed=0.8; elapsedRunTime=0;
+    flightEnergy = MAX_FLIGHT_ENERGY; updateChargeBar();
+
+    player.x=120; player.y=ground-player.h; player.vx=0; player.vy=0; player.onGround=true;
+    scoreHudEl.textContent='0'; scoreEl.textContent='0';
+    coyoteTimer = 0; jumpBufferTimer = 0; jumpHeld = false; leftHeld=false; rightHeld=false; upHeld=false;
+    invuln = 0; lives = MAX_LIVES; renderLives();
+    cvs.classList.remove('blink');
+    lastPickupTime = -Infinity;
+  }
+
+  function endGame(){
+    gameOver = true; running = false;
+    overlay.style.display='flex';
+    if(cleared){
+      overlayBox.style.color = 'var(--ok)';
+      overlayBox.textContent = 'XXXX';
+    } else {
+      overlayBox.style.color = 'var(--err)';
+      overlayBox.textContent = 'Ritenta quante volte vuoi, tanto non ci riuscirai mai!';
+    }
+    document.getElementById('restartGame').style.display='inline-block';
+    cvs.classList.remove('blink');
+  }
+
+  function hitPlayer(){
+    if(invuln > 0 || gameOver) return;
+    lives -= 1; renderLives();
+    invuln = 1.2;
+    cvs.classList.add('blink');
+    if(lives <= 0){ endGame(); }
+  }
+
+  /* ---------- LOOP ---------- */
+
   function drawBackground(){
     if(bgImg && bgImg.complete && bgImg.naturalWidth){
       const bw = bgImg.naturalWidth;
@@ -488,48 +545,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  function resetGame(){
-    running=false; gameOver=false; score=0; lastTs=null; lastSpawn=0;
-    overlay.style.display='none'; overlayBox.textContent='';
-    obstacles.length=0; pickups.length=0; spawnQueue.length=0;
-
-    speed=0.8; elapsedRunTime=0;
-    flightEnergy = MAX_FLIGHT_ENERGY; updateChargeBar();
-
-    player.x=120; player.y=ground-player.h; player.vx=0; player.vy=0; player.onGround=true;
-    scoreHudEl.textContent='0'; scoreEl.textContent='0';
-    coyoteTimer = 0; jumpBufferTimer = 0; jumpHeld = false; leftHeld=false; rightHeld=false; upHeld=false;
-    invuln = 0; lives = MAX_LIVES; renderLives();
-    cvs.classList.remove('blink');
-    lastPickupTime = -Infinity;
-  }
-
-  function endGameSuccess(){
-    gameOver = true; running = false;
-    overlay.style.display='flex';
-    overlayBox.style.color = 'var(--ok)';
-    overlayBox.textContent = 'XXXX';
-    restartBtn.style.display='inline-block';
-    cvs.classList.remove('blink');
-  }
-
-  function endGameFailure(){
-    gameOver = true; running = false;
-    overlay.style.display='flex';
-    overlayBox.style.color = 'var(--err)';
-    overlayBox.textContent = 'Ritenta quante volte vuoi, tanto non ci riuscirai mai!';
-    restartBtn.style.display='inline-block';
-    cvs.classList.remove('blink');
-  }
-
-  function hitPlayer(){
-    if(invuln > 0 || gameOver) return;
-    lives -= 1; renderLives();
-    invuln = 1.2;
-    cvs.classList.add('blink');
-    if(lives <= 0){ endGameFailure(); }
-  }
-
   function loop(ts){
     if(!running) return;
     const delta = lastTs ? (ts-lastTs)/1000 : 0; lastTs = ts;
@@ -541,12 +556,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const targetSpeed = 0.8 + (MAX_SPEED - 0.8) * eased;
     speed += (targetSpeed - speed) * ACCEL_PER_SEC;
 
-    // Punteggio
+    // Punteggio e flag clear
     score += (1.1 + (speed-0.8)*0.22) * delta;
     const shown = Math.floor(score);
     scoreHudEl.textContent = shown;
     scoreEl.textContent = shown;
-    if(score >= TARGET_SCORE && !gameOver){ endGameSuccess(); }
+    if(!cleared && score >= TARGET_SCORE){ cleared = true; } // continua a giocare!
 
     // Sfondo
     drawBackground();
@@ -564,7 +579,8 @@ document.addEventListener('DOMContentLoaded', () => {
     if(ts - lastSpawn > interval){
       lastSpawn = ts;
 
-      if(score < TARGET_SCORE && Math.random() < PICKUP_CHANCE){
+      // Collezionabili solo finché NON hai "cleared"
+      if(!cleared && Math.random() < PICKUP_CHANCE){
         if(!spawnPickup()){ queuePattern(score); }
       } else {
         queuePattern(score);
@@ -575,7 +591,7 @@ document.addEventListener('DOMContentLoaded', () => {
     for(let i=spawnQueue.length-1;i>=0;i--){
       spawnQueue[i].delay -= delta;
       if(spawnQueue[i].delay <= 0){
-        spawnObstacleOfType(spawnQueue[i].type);
+        spawnObstacleNow(spawnQueue[i].type, spawnQueue[i].scale ?? 1);
         spawnQueue.splice(i,1);
       }
     }
@@ -628,17 +644,23 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // volo (tenendo ↑)
     if(upHeld && !player.onGround && flightEnergy > 0){
-      player.vy -= FLIGHT_BOOST;                         // contrasta la gravità per-frame
-      if(player.vy < FLIGHT_CLIMB_CAP) player.vy = FLIGHT_CLIMB_CAP; // cap salita
+      player.vy -= FLIGHT_BOOST;                         // contrasta la gravità
+      if(player.vy < FLIGHT_CLIMB_CAP) player.vy = FLIGHT_CLIMB_CAP;
       flightEnergy = Math.max(0, flightEnergy - FLIGHT_DRAIN * delta);
       updateChargeBar();
     } else {
-      // ricarica lenta
       flightEnergy = Math.min(MAX_FLIGHT_ENERGY, flightEnergy + FLIGHT_RECHARGE * delta);
       updateChargeBar();
     }
 
     player.y += player.vy;
+
+    // --- LIMITI verticali: non oltre la corsia alta + margine, e non oltre il top schermo
+    const topLimit = Math.min(FLIGHT_MIN_Y, 2); // sicurezza: mai sopra y=2
+    if(player.y < topLimit){
+      player.y = topLimit;
+      if(player.vy < 0) player.vy = 0;
+    }
 
     // atterraggio
     if(player.y + player.h >= ground){
@@ -678,7 +700,8 @@ document.addEventListener('DOMContentLoaded', () => {
     requestAnimationFrame(loop);
   }
 
-  // Input tastiera
+  /* ---------- INPUT ---------- */
+
   window.addEventListener('keydown', async (e)=>{
     const tag=document.activeElement && document.activeElement.tagName;
     if(tag==='INPUT' || tag==='TEXTAREA') return;
