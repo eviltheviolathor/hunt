@@ -52,34 +52,36 @@
   .pentacolo{position:relative;width:min(90vw,600px);height:min(90vw,600px);margin:0 auto 24px}
   .pentacolo svg{transform:rotate(180deg)} /* rovesciato */
 
-  /* *** campi SUL pentacolo (punte) *** */
+  /* *** campi SUL pentacolo (sopra, centro, sotto) *** */
   .rit-field{position:absolute;transform:translate(-50%,-50%)}
-  /* coordinate tarate sullo star rovesciato */
   .rf-top    {left:50%; top:22%;  width:66%;}
-  .rf-left   {left:28%; top:77%;  width:48%;}
-  .rf-right  {left:72%; top:77%;  width:48%;}
+  .rf-mid    {left:50%; top:50%;  width:60%;}
+  .rf-bottom {left:50%; top:78%;  width:66%;}
 
   .rit-field input{width:100%;padding:10px 12px;border-radius:10px;border:2px solid rgba(43,255,136,.35);background:rgba(10,10,10,.85);color:var(--fg);font-size:clamp(14px,2vw,16px)}
-  .rit-btn{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%)}
+  .rit-btn{position:absolute;left:50%;top:62%;transform:translate(-50%,-50%)} /* bottone leggermente sopra il centro */
   .rit-msg{min-height:20px;margin-top:8px;font-size:1rem}
 
   @media (max-width:700px){
-    /* su mobile li metto comunque sotto: più leggibili */
+    /* su mobile li metto sotto, in colonna */
     .rf-top   {left:50%; top:106%; width:92%;}
-    .rf-left  {left:50%; top:124%; width:92%;}
-    .rf-right {left:50%; top:142%; width:92%;}
+    .rf-mid   {left:50%; top:124%; width:92%;}
+    .rf-bottom{left:50%; top:142%; width:92%;}
+    .rit-btn  {top:160%;}
   }
 
   /* GIOCO */
   #game{display:none;width:100%;max-width:min(960px,96vw);margin:28px auto 0;text-align:center}
   #game h2{margin:8px 0 6px;font-size:clamp(20px,4vw,28px);color:var(--accent);text-shadow:0 0 10px var(--accent)}
+  #goal{color:var(--muted); margin-bottom:8px}
   #canvasWrap{background:#000;border:2px solid rgba(43,255,136,.3);border-radius:10px;padding:8px}
   canvas{display:block;width:100%;height:auto;background:#000}
   .hud{color:var(--muted);margin-top:8px;font-size:clamp(14px,2vw,16px)}
   .score{color:var(--accent2);margin-left:6px}
+  .win{color:var(--ok); margin-top:10px}
 </style>
 </head>
-<body><h1>porcodio</h1>
+<body>
   <main class="page">
     <!-- HERO -->
     <div class="hero" id="heroBox"></div>
@@ -108,11 +110,10 @@
             <circle cx="50" cy="50" r="45" fill="none" stroke="rgba(43,255,136,.35)" stroke-width="2"/>
             <polygon points="50,6 61,40 96,40 67,60 78,94 50,73 22,94 33,60 4,40 39,40" fill="none" stroke="rgba(43,255,136,.55)" stroke-width="2"/>
           </svg>
-          <!-- Campi SUL pentacolo -->
-          <div class="rit-field rf-top"><input id="f1" type="text" placeholder="Ingrediente I"></div>
-          <div class="rit-field rf-left"><input id="f2" type="text" placeholder="Ingrediente II"></div>
-          <div class="rit-field rf-right"><input id="f3" type="text" placeholder="Ingrediente III"></div>
-
+          <!-- Campi SUL pentacolo (sopra / centro / sotto) -->
+          <div class="rit-field rf-top"><input id="f1" type="text" placeholder="Ingrediente (sopra)"></div>
+          <div class="rit-field rf-mid"><input id="f2" type="text" placeholder="Ingrediente (centro)"></div>
+          <div class="rit-field rf-bottom"><input id="f3" type="text" placeholder="Ingrediente (sotto)"></div>
           <button class="rit-btn" id="completeBtn">Completa</button>
         </div>
         <img class="rit-gif" src="https://media1.giphy.com/media/v1.Y2lkPTc5MGI3NjExeHlhOXY3M3hsb3cxdnlkbDRsM3M3c2tpNHA2ejFoaHFudzE4ZDlwZyZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/9zOiTQ7RPxU7C/giphy.gif" alt="fuoco destro">
@@ -124,9 +125,17 @@
     <!-- GIOCO -->
     <section id="game">
       <h2>La Corsa della Zucca</h2>
+      <div id="goal">Obiettivo: raggiungi un punteggio di <strong>666</strong> per superare il livello.</div>
       <div id="canvasWrap"><canvas id="runner" width="900" height="300"></canvas></div>
-      <div class="hud">Premi <strong>SPAZIO</strong> o <strong>↑</strong> (o tocca lo schermo) per saltare. Punteggio: <span class="score" id="score">0</span></div>
-      <div class="cta"><button id="startGame">Avvia</button> <button id="restartGame" style="display:none">Riprova</button></div>
+      <div class="hud">
+        Controlli: <strong>SPAZIO</strong> o <strong>↑</strong> (oppure tocca/tap). Punteggio:
+        <span class="score" id="score">0</span>
+      </div>
+      <div class="win" id="winMsg" style="display:none">✦ Hai domato la Zucca! Livello superato. ✦</div>
+      <div class="cta" style="margin-top:10px">
+        <button id="startGame">Avvia</button>
+        <button id="restartGame" style="display:none">Riprova</button>
+      </div>
     </section>
   </main>
 
@@ -188,86 +197,129 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('check').onclick=check;
   build();
 
-  /* ===== RITUALE — ordine libero con classificazione ===== */
+  /* ===== RITUALE — riconoscimento ordine LIBERO ===== */
   const norm=(s)=>s.normalize('NFD').replace(/\p{Diacritic}/gu,'').toLowerCase().replace(/[^\p{L}\p{N}\s]/gu,'').replace(/\s+/g,' ').trim();
-
   function classify(text){
     const v=norm(text); if(!v) return null;
     const has=(...ws)=>ws.every(w=>v.includes(w));
-    // Candela nera
     if(v.includes('candela') && (v.includes('nera')||v.includes('nero'))) return 'CANDLE';
-    // Coltello arrugginito con simbolo della bestia
-    const rust = v.includes('arrugginito')||v.includes('arrugginita')||v.includes('ossidato')||v.includes('ossidata')||v.includes('ruggine');
+    const rust=v.includes('arrugginito')||v.includes('arrugginita')||v.includes('ossidato')||v.includes('ossidata')||v.includes('ruggine');
     if(v.includes('coltello') && rust && has('simbolo','bestia')) return 'KNIFE';
-    // Peli pubici di zombie femmina
-    const peli = v.includes('peli')||v.includes('pelo');
-    const pub  = v.includes('pubici')||v.includes('pubico');
-    const fem  = v.includes('femmina')||v.includes('donna');
+    const peli=v.includes('peli')||v.includes('pelo'); const pub=v.includes('pubici')||v.includes('pubico');
+    const fem=v.includes('femmina')||v.includes('donna');
     if(peli && pub && v.includes('zombie') && fem) return 'HAIR';
     return null;
   }
-
   function submitRitual(){
-    const types = [classify(document.getElementById('f1').value),
-                   classify(document.getElementById('f2').value),
-                   classify(document.getElementById('f3').value)];
-    const set = new Set(types.filter(Boolean));
-    const ok = set.has('CANDLE') && set.has('KNIFE') && set.has('HAIR') && types.every(t=>t!==null);
-
+    const types=[classify(f1.value), classify(f2.value), classify(f3.value)];
+    const set=new Set(types.filter(Boolean));
+    const ok=set.has('CANDLE') && set.has('KNIFE') && set.has('HAIR') && types.every(t=>t!==null);
     const box=document.getElementById('ritMsg');
     if(ok){
       box.className='rit-msg success';
       box.textContent='Il cerchio si illumina… il portale si apre!';
-      document.getElementById('game').style.display='block';
-      document.getElementById('game').scrollIntoView({behavior:'smooth'});
+      gameSec.style.display='block';
+      gameSec.scrollIntoView({behavior:'smooth'});
     }else{
       box.className='rit-msg fail';
       box.textContent='La formula non risponde. Forse hai sbagliato gli ingredienti...';
     }
   }
+  const f1=document.getElementById('f1'), f2=document.getElementById('f2'), f3=document.getElementById('f3');
   document.getElementById('completeBtn').onclick=submitRitual;
-  ['f1','f2','f3'].forEach(id=>{
-    document.getElementById(id).addEventListener('keydown',e=>{
-      if(e.key==='Enter') submitRitual();
-      e.stopPropagation(); // non “ruba” Space/Up al gioco mentre si scrive
-    });
-  });
+  ;[f1,f2,f3].forEach(el=>el.addEventListener('keydown',e=>{ if(e.key==='Enter') submitRitual(); e.stopPropagation(); }));
 
-  /* ===== MINIGIOCO (come prima) ===== */
-  const cvs=document.getElementById('runner'), ctx=cvs.getContext('2d'),
-        scoreEl=document.getElementById('score'), startBtn=document.getElementById('startGame'),
-        restartBtn=document.getElementById('restartGame');
-  let running=false, gameOver=false, score=0, lastSpawn=0, speed=6;
+  /* =========================
+     MINIGIOCO — Pumpkin Runner
+     ========================= */
+  const TARGET_SCORE = 666; // ≈ 5 minuti
+  const cvs=document.getElementById('runner'), ctx=cvs.getContext('2d');
+  const scoreEl=document.getElementById('score'), startBtn=document.getElementById('startGame'),
+        restartBtn=document.getElementById('restartGame'), winMsg=document.getElementById('winMsg');
+
+  let running=false, gameOver=false, score=0, lastSpawn=0, speed=5, lastTs=null, startTs=null;
   const ground=cvs.height-40, player={x:80,y:ground-32,w:36,h:36,vy:0,onGround:true}, obstacles=[];
-  const spawnObstacle=()=>{const w=26+Math.random()*18,h=40+Math.random()*60;obstacles.push({x:cvs.width+10,y:ground-h,w,h});};
-  function drawPumpkin(p){ctx.fillStyle='var(--pumpkin)';ctx.beginPath();ctx.ellipse(p.x+p.w/2,p.y+p.h/2,p.w/2,p.h/2,0,0,Math.PI*2);ctx.fill();
-    ctx.fillStyle='#7a5c2e';ctx.fillRect(p.x+p.w/2-3,p.y-6,6,8);ctx.fillStyle='#000';
-    ctx.beginPath();ctx.moveTo(p.x+10,p.y+14);ctx.lineTo(p.x+18,p.y+8);ctx.lineTo(p.x+22,p.y+18);ctx.closePath();ctx.fill();
-    ctx.beginPath();ctx.moveTo(p.x+p.w-10,p.y+14);ctx.lineTo(p.x+p.w-18,p.y+8);ctx.lineTo(p.x+p.w-22,p.y+18);ctx.closePath();ctx.fill();
-    ctx.beginPath();ctx.moveTo(p.x+10,p.y+p.h-12);ctx.lineTo(p.x+16,p.y+p.h-8);ctx.lineTo(p.x+22,p.y+p.h-12);
-    ctx.lineTo(p.x+28,p.y+p.h-8);ctx.lineTo(p.x+34,p.y+p.h-12);ctx.lineTo(p.x+40,p.y+p.h-8);ctx.lineTo(p.x+46,p.y+p.h-12);ctx.fill();}
-  function drawGravestone(o){ctx.fillStyle='var(--stone)';ctx.fillRect(o.x,o.y+o.h-8,o.w,8);
-    ctx.beginPath();ctx.moveTo(o.x,o.y+o.h-8);ctx.lineTo(o.x,o.y+12);ctx.quadraticCurveTo(o.x+o.w/2,o.y-10,o.x+o.w,o.y+12);
-    ctx.lineTo(o.x+o.w,o.y+o.h-8);ctx.closePath();ctx.fill();}
-  const resetGame=()=>{running=false;gameOver=false;score=0;speed=6;obstacles.length=0;player.y=ground-32;player.vy=0;player.onGround=true;scoreEl.textContent='0';};
-  const jump=()=>{if(!running||gameOver)return;if(player.onGround){player.vy=-12.5;player.onGround=false;}};
+
+  function spawnObstacle(){ const w=26+Math.random()*18, h=40+Math.random()*60; obstacles.push({ x:cvs.width+10, y:ground-h, w, h }); }
+  function drawPumpkin(p){
+    ctx.fillStyle='var(--pumpkin)'; ctx.beginPath(); ctx.ellipse(p.x+p.w/2,p.y+p.h/2,p.w/2,p.h/2,0,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle='#7a5c2e'; ctx.fillRect(p.x+p.w/2-3,p.y-6,6,8);
+    ctx.fillStyle='#000'; ctx.beginPath(); ctx.moveTo(p.x+10,p.y+14); ctx.lineTo(p.x+18,p.y+8); ctx.lineTo(p.x+22,p.y+18); ctx.closePath(); ctx.fill();
+    ctx.beginPath(); ctx.moveTo(p.x+p.w-10,p.y+14); ctx.lineTo(p.x+p.w-18,p.y+8); ctx.lineTo(p.x+p.w-22,p.y+18); ctx.closePath(); ctx.fill();
+    ctx.beginPath(); ctx.moveTo(p.x+10,p.y+p.h-12); ctx.lineTo(p.x+16,p.y+p.h-8); ctx.lineTo(p.x+22,p.y+p.h-12);
+    ctx.lineTo(p.x+28,p.y+p.h-8); ctx.lineTo(p.x+34,p.y+p.h-12); ctx.lineTo(p.x+40,p.y+p.h-8); ctx.lineTo(p.x+46,p.y+p.h-12); ctx.fill();
+  }
+  function drawGravestone(o){
+    ctx.fillStyle='var(--stone)'; ctx.fillRect(o.x,o.y+o.h-8,o.w,8);
+    ctx.beginPath(); ctx.moveTo(o.x,o.y+o.h-8); ctx.lineTo(o.x,o.y+12);
+    ctx.quadraticCurveTo(o.x+o.w/2,o.y-10,o.x+o.w,o.y+12); ctx.lineTo(o.x+o.w,o.y+o.h-8); ctx.closePath(); ctx.fill();
+  }
+  function resetGame(){
+    running=false; gameOver=false; score=0; speed=5; lastTs=null; startTs=null; lastSpawn=0; winMsg.style.display='none';
+    obstacles.length=0; player.y=ground-32; player.vy=0; player.onGround=true; scoreEl.textContent='0';
+  }
+  function jump(){ if(!running||gameOver) return; if(player.onGround){ player.vy=-12.5; player.onGround=false; } }
+
   function loop(ts){
-    if(!running)return;
+    if(!running) return;
+    if(startTs===null) startTs = ts;
+    const delta = lastTs ? (ts-lastTs)/1000 : 0;  // sec
+    lastTs = ts;
+
+    // score: 2.2 punti / secondo -> 666 ≈ 303s ≈ 5.05 min
+    score += 2.2 * delta;
+    scoreEl.textContent = Math.floor(score);
+
+    // win condition
+    if(score >= TARGET_SCORE && !gameOver){
+      running = false; gameOver = true; winMsg.style.display='block';
+      restartBtn.style.display='inline-block';
+    }
+
+    // clear
     ctx.clearRect(0,0,cvs.width,cvs.height);
-    ctx.strokeStyle='rgba(43,255,136,.3)';ctx.beginPath();ctx.moveTo(0,ground+0.5);ctx.lineTo(cvs.width,ground+0.5);ctx.stroke();
-    if(ts-lastSpawn>1300){spawnObstacle();lastSpawn=ts;if(speed<10)speed+=0.05;}
-    for(let i=obstacles.length-1;i>=0;i--){const o=obstacles[i];o.x-=speed;drawGravestone(o);if(o.x+o.w<0)obstacles.splice(i,1);
-      if(player.x<o.x+o.w&&player.x+player.w>o.x&&player.y<o.y+o.h&&player.y+player.h>o.y){gameOver=true;running=false;restartBtn.style.display='inline-block';}}
-    player.vy+=0.7;player.y+=player.vy;if(player.y+player.h>=ground){player.y=ground-player.h;player.vy=0;player.onGround=true;}
-    drawPumpkin(player);score+=0.1;scoreEl.textContent=Math.floor(score);requestAnimationFrame(loop);}
-  window.addEventListener('keydown',e=>{
-    const tag=document.activeElement&&document.activeElement.tagName;
-    if(tag==='INPUT'||tag==='TEXTAREA')return;
-    if(e.code==='Space'||e.code==='ArrowUp'){e.preventDefault();jump();}
+
+    // terreno
+    ctx.strokeStyle='rgba(43,255,136,.3)'; ctx.beginPath(); ctx.moveTo(0,ground+0.5); ctx.lineTo(cvs.width,ground+0.5); ctx.stroke();
+
+    // spawn ostacoli (ogni ~1.4s)
+    if(ts - lastSpawn > 1400){ spawnObstacle(); lastSpawn = ts; if(speed < 11) speed += 0.03; }
+
+    // ostacoli
+    for(let i=obstacles.length-1;i>=0;i--){
+      const o=obstacles[i]; o.x -= speed; drawGravestone(o);
+      if(o.x + o.w < 0) obstacles.splice(i,1);
+      // collisione
+      if(player.x < o.x + o.w && player.x + player.w > o.x &&
+         player.y < o.y + o.h && player.y + player.h > o.y){
+        gameOver = true; running = false; restartBtn.style.display='inline-block';
+      }
+    }
+
+    // fisica player
+    player.vy += 0.7;
+    player.y += player.vy;
+    if(player.y + player.h >= ground){ player.y = ground - player.h; player.vy = 0; player.onGround = true; }
+
+    drawPumpkin(player);
+
+    requestAnimationFrame(loop);
+  }
+
+  // Input: non catturare SPACE/UP quando si digita negli input
+  window.addEventListener('keydown', (e)=>{
+    const tag=document.activeElement && document.activeElement.tagName;
+    if(tag==='INPUT' || tag==='TEXTAREA') return;
+    if(e.code==='Space' || e.code==='ArrowUp'){ e.preventDefault(); jump(); }
   });
-  cvs.addEventListener('pointerdown',jump);
-  document.getElementById('startGame').onclick=()=>{if(!running&&!gameOver){running=true;restartBtn.style.display='none';lastSpawn=performance.now();requestAnimationFrame(loop);}};
-  document.getElementById('restartGame').onclick=()=>{resetGame();running=true;restartBtn.style.display='none';lastSpawn=performance.now();requestAnimationFrame(loop);};
+  document.getElementById('runner').addEventListener('pointerdown', jump);
+
+  document.getElementById('startGame').onclick = ()=>{
+    if(!running && !gameOver){ running = true; restartBtn.style.display='none'; requestAnimationFrame(loop); }
+  };
+  document.getElementById('restartGame').onclick = ()=>{
+    resetGame(); running = true; this.style && (this.style.display='none'); requestAnimationFrame(loop);
+  };
 });
 </script>
 </body>
