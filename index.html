@@ -75,7 +75,6 @@
   canvas{display:block;width:100%;height:auto;background:#000}
   .hud{color:var(--muted);margin-top:8px;font-size:clamp(14px,2vw,16px)}
   .score{color:var(--accent2);margin-left:6px}
-  .win{color:var(--ok); margin-top:10px}
   .loading{color:var(--accent2); margin:8px 0}
 
   /* HUD punteggio + cuori + carica volo */
@@ -97,13 +96,18 @@
     user-select:none; pointer-events:none;
   }
   .livesHud img{ width:18px; height:18px; image-rendering:auto; }
+
+  .chargeLabel{
+    position:absolute; left:50%; transform:translateX(-50%);
+    top:28px; color:var(--muted); font-size:12px; user-select:none;
+  }
   .chargeHud{
-    position:absolute; left:8px; top:44px; width:140px; height:10px;
+    position:absolute; left:50%; transform:translateX(-50%);
+    top:44px; width:180px; height:10px;
     background:rgba(255,255,255,.08); border:1px solid rgba(43,255,136,.35); border-radius:999px;
     overflow:hidden; user-select:none;
   }
   .chargeFill{height:100%; width:0%; background:linear-gradient(90deg, #2bff88, #6bffda)}
-  .chargeLabel{position:absolute; left:8px; top:28px; color:var(--muted); font-size:12px; user-select:none}
 
   /* Overlay fine partita */
   .overlayMsg{
@@ -271,7 +275,7 @@ document.addEventListener('DOMContentLoaded', () => {
   ;[f1,f2,f3].forEach(el=>el.addEventListener('keydown',e=>{ if(e.key==='Enter') submitRitual(); e.stopPropagation(); }));
 
   /* =========================
-     MINIGIOCO — Pumpkin Runner (spawn sfalsati + volo + overlay)
+     MINIGIOCO — Pumpkin Runner (volo fix + spawn random sfalsati + overlay)
      ========================= */
   const TARGET_SCORE = 666;
 
@@ -289,7 +293,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // Immagini
   const playerImg = new Image(); playerImg.src = 'media/zucca.png?v=1';
   const heartImgSrc = 'media/heart.png';
-  const bgImg = new Image(); bgImg.src = 'media/sfondo.png'; // sfondo infinito
+  const bgImg = new Image(); bgImg.src = 'media/sfondo.png';
   const monsterNames = ['mostro1.png','mostro2.png','mostro3.png','mostro4.png'];
   const monsterImgs = monsterNames.map(n => { const im=new Image(); im.src='media/'+n+'?v=1'; return im; });
 
@@ -324,11 +328,9 @@ document.addEventListener('DOMContentLoaded', () => {
   player.y = ground - player.h;
 
   // Oggetti
-  const obstacles=[]; // {x,y,w,h,img,type:'ground'|'air'}
-  const pickups=[];   // {x,y,type:'candle'|'heart', w,h, emoji}
-
-  // Coda spawn sfalsati
-  const spawnQueue=[]; // {type:'ground'|'air', delay:sec}
+  const obstacles=[];   // {x,y,w,h,img,type:'ground'|'air'}
+  const pickups=[];     // {x,y,type:'candle'|'heart', w,h, emoji}
+  const spawnQueue=[];  // {type, delay}
 
   // Vite
   const MAX_LIVES = 3;
@@ -346,7 +348,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // Fisica salto + movimento + volo
-  const GRAVITY = 0.52;
+  const GRAVITY = 0.52;            // per-frame
   const BASE_JUMP_VY = -11.0;
   const SHORT_CUT_VY = -3.0;
   const COYOTE_TIME = 0.14;
@@ -357,13 +359,18 @@ document.addEventListener('DOMContentLoaded', () => {
   const MAX_VX = 3.0;
   const FRICTION = 0.86;
 
-  // Volo (tenendo premuto ↑)
+  // Volo (tenendo ↑)
   let upHeld = false;
-  let flightEnergy = 1.0;              // 0..1
-  const FLIGHT_DRAIN = 0.6;            // /s quando in volo
-  const FLIGHT_RECHARGE = 0.22;        // /s ricarica
-  const FLIGHT_THRUST = 9.0;           // spinta verso l'alto (riduce la caduta)
-  function updateChargeBar(){ chargeFill.style.width = Math.round(flightEnergy*100)+'%'; }
+  const MAX_FLIGHT_ENERGY = 0.5;   // metà carica massima
+  let flightEnergy = MAX_FLIGHT_ENERGY;
+  const FLIGHT_DRAIN = 0.6;        // /s mentre voli
+  const FLIGHT_RECHARGE = 0.18;    // /s ricarica lenta
+  const FLIGHT_BOOST = 0.70;       // spinta per-frame (compensa gravità 0.52)
+  const FLIGHT_CLIMB_CAP = -4.2;   // velocità massima di salita (più negativo = più su)
+  function updateChargeBar(){
+    const pct = Math.round((flightEnergy / MAX_FLIGHT_ENERGY)*100);
+    chargeFill.style.width = Math.max(0, Math.min(100, pct)) + '%';
+  }
 
   let coyoteTimer = 0;
   let jumpBufferTimer = 0;
@@ -397,7 +404,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  // Spawner di un singolo ostacolo
+  // Spawner
   function spawnObstacleOfType(type){
     const img = monsterImgs[Math.floor(Math.random()*monsterImgs.length)];
     const w = 46 + Math.random()*10;
@@ -407,32 +414,34 @@ document.addEventListener('DOMContentLoaded', () => {
     obstacles.push({ x:cvs.width+10, y, w, h, img, type });
   }
 
-  // Aggiunge alla coda uno o più spawn con ritardi; sfalso temporale
+  function shuffleArray(a){ for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } return a; }
+
   function queuePattern(currentScore){
-    const GAP = 0.18; // secondi tra uno spawn e l'altro (sfalzati)
-    if(currentScore > 600){
-      // 4: 2 air + 2 ground (A A G G)
-      spawnQueue.push({type:'air', delay:0});
-      spawnQueue.push({type:'air', delay:GAP});
-      spawnQueue.push({type:'ground', delay:GAP*2});
-      spawnQueue.push({type:'ground', delay:GAP*3});
-    } else if(currentScore > 400){
-      // 3: 2 air + 1 ground (A A G)
-      spawnQueue.push({type:'air', delay:0});
-      spawnQueue.push({type:'air', delay:GAP});
-      spawnQueue.push({type:'ground', delay:GAP*2});
-    } else if(currentScore > 200){
-      // 2: 1 air + 1 ground (A G)
-      spawnQueue.push({type:'air', delay:0});
-      spawnQueue.push({type:'ground', delay:GAP});
-    } else {
-      // 1: random
-      spawnQueue.push({type: (Math.random()<0.5?'air':'ground'), delay:0});
-    }
+    // Quanti?
+    let counts = { air:0, ground:0 };
+    if(currentScore > 600){ counts = {air:2, ground:2}; }
+    else if(currentScore > 400){ counts = {air:2, ground:1}; }
+    else if(currentScore > 200){ counts = {air:1, ground:1}; }
+    else { counts = {air: (Math.random()<0.5?1:0), ground: (Math.random()<0.5?1:0)}; if(counts.air===0 && counts.ground===0) counts.ground=1; }
+
+    // Crea lista tipi e randomizza ordine
+    const types = [];
+    for(let i=0;i<counts.air;i++) types.push('air');
+    for(let i=0;i<counts.ground;i++) types.push('ground');
+    shuffleArray(types);
+
+    // Ritardi sfalsati casuali
+    const BASE_GAP = 0.18;
+    const JITTER = 0.10; // ±100ms
+    const startOffset = Math.random()*0.20; // 0–200ms prima del primo spawn
+    types.forEach((t, idx)=>{
+      const delay = startOffset + idx*BASE_GAP + (Math.random()*2*JITTER - JITTER);
+      spawnQueue.push({type:t, delay: Math.max(0, delay)});
+    });
   }
 
-  // --- Collezionabili ---
-  const PICKUP_CHANCE = 0.20;      // ~20% al posto di un pattern (solo < 666)
+  // Collezionabili
+  const PICKUP_CHANCE = 0.20;
   const PICKUP_COOLDOWN = 4.0;
   let lastPickupTime = -Infinity;
 
@@ -460,7 +469,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function drawImage(img, x,y,w,h){ if(img && img.complete && img.naturalWidth) ctx.drawImage(img,x,y,w,h); }
 
-  // --- Background ---
+  // Background
   function drawBackground(){
     if(bgImg && bgImg.complete && bgImg.naturalWidth){
       const bw = bgImg.naturalWidth;
@@ -484,11 +493,9 @@ document.addEventListener('DOMContentLoaded', () => {
     overlay.style.display='none'; overlayBox.textContent='';
     obstacles.length=0; pickups.length=0; spawnQueue.length=0;
 
-    // reset velocità ed energia volo
     speed=0.8; elapsedRunTime=0;
-    flightEnergy = 1.0; updateChargeBar();
+    flightEnergy = MAX_FLIGHT_ENERGY; updateChargeBar();
 
-    // reset player
     player.x=120; player.y=ground-player.h; player.vx=0; player.vy=0; player.onGround=true;
     scoreHudEl.textContent='0'; scoreEl.textContent='0';
     coyoteTimer = 0; jumpBufferTimer = 0; jumpHeld = false; leftHeld=false; rightHeld=false; upHeld=false;
@@ -549,7 +556,7 @@ document.addEventListener('DOMContentLoaded', () => {
     ctx.beginPath(); ctx.moveTo(0,ground+0.5); ctx.lineTo(cvs.width,ground+0.5); ctx.stroke();
     ctx.setLineDash([6,6]); ctx.beginPath(); ctx.moveTo(0,airLaneY+0.5); ctx.lineTo(cvs.width,airLaneY+0.5); ctx.stroke(); ctx.setLineDash([]);
 
-    // spawn pattern / pickup
+    // spawn pattern/pickup
     const baseInterval = 2400 - speed*90;
     const jitter = 900 * Math.random();
     const interval = Math.max(1400, baseInterval + jitter);
@@ -557,8 +564,8 @@ document.addEventListener('DOMContentLoaded', () => {
     if(ts - lastSpawn > interval){
       lastSpawn = ts;
 
-      if(score < TARGET_SCORE && Math.random() < 0.20){
-        if(!spawnPickup()){ queuePattern(score); } else { /* ok pickup */ }
+      if(score < TARGET_SCORE && Math.random() < PICKUP_CHANCE){
+        if(!spawnPickup()){ queuePattern(score); }
       } else {
         queuePattern(score);
       }
@@ -619,14 +626,15 @@ document.addEventListener('DOMContentLoaded', () => {
     // gravità
     player.vy += GRAVITY;
 
-    // volo (tenendo ↑, con energia)
+    // volo (tenendo ↑)
     if(upHeld && !player.onGround && flightEnergy > 0){
-      player.vy -= FLIGHT_THRUST * delta;           // riduci la caduta / piccola risalita
+      player.vy -= FLIGHT_BOOST;                         // contrasta la gravità per-frame
+      if(player.vy < FLIGHT_CLIMB_CAP) player.vy = FLIGHT_CLIMB_CAP; // cap salita
       flightEnergy = Math.max(0, flightEnergy - FLIGHT_DRAIN * delta);
       updateChargeBar();
     } else {
-      // ricarica lenta (anche in aria ma più realistica; se vuoi: ricarica più veloce a terra)
-      flightEnergy = Math.min(1, flightEnergy + FLIGHT_RECHARGE * delta);
+      // ricarica lenta
+      flightEnergy = Math.min(MAX_FLIGHT_ENERGY, flightEnergy + FLIGHT_RECHARGE * delta);
       updateChargeBar();
     }
 
@@ -680,7 +688,6 @@ document.addEventListener('DOMContentLoaded', () => {
     if(e.code==='ArrowUp'){ upHeld = true; }
 
     if(e.code==='Space' || e.code==='ArrowUp'){
-      // ArrowUp fa anche da salto; tenendola si abilita il volo
       e.preventDefault();
       if(gameOver){ resetGame(); await startGame(); return; }
       jumpHeld = true;
@@ -695,7 +702,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if(e.code==='Space'){ jumpHeld = false; }
   });
 
-  // Touch/click sul canvas: tap per saltare
+  // Touch/click sul canvas
   document.getElementById('runner').addEventListener('pointerdown', ()=>{
     if(gameOver){ resetGame(); startGame(); return; }
     if(!running){ startGame(); requestJump(); }
