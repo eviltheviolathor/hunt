@@ -142,7 +142,7 @@
   @keyframes bl { from{opacity:1} to{opacity:.35} }
 </style>
 </head>
-<body><h1>diominchia</h1>
+<body><h1>diominchia32</h1>
   <main class="page">
     <!-- HERO -->
     <div class="hero" id="heroBox"></div>
@@ -339,11 +339,11 @@ document.addEventListener('DOMContentLoaded', () => {
   let cleared=false;
 
   // Velocità: base +10%, e **dopo 300 punti** +30% extra
-  let speed = 0.8;
-  const MAX_SPEED_BASE = 4.2;
-  const SPEED_MULT_BASE = 1.10;    // +10% globale
+  let speed = 1;
+  const MAX_SPEED_BASE = 3;
+  const SPEED_MULT_BASE = 1;    // +10% globale
   const EXTRA_AFTER_300 = 1.30;     // +30% dopo 300
-  const ACCEL_PER_SEC = 0.04;
+  const ACCEL_PER_SEC = 0.02;
   const ACCEL_RAMP_TIME = 90;
   let elapsedRunTime = 0;
 
