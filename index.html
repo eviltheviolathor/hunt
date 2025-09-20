@@ -78,7 +78,7 @@
   .win{color:var(--ok); margin-top:10px}
   .loading{color:var(--accent2); margin:8px 0}
 
-  /* HUD punteggio overlay */
+  /* HUD punteggio + cuori */
   .scoreHud{
     position:absolute; left:8px; top:8px;
     padding:6px 10px; font-weight:700;
@@ -88,9 +88,20 @@
     text-shadow:0 0 8px rgba(43,255,136,.35);
     user-select:none; pointer-events:none;
   }
+  .livesHud{
+    position:absolute; right:8px; top:8px;
+    display:flex; gap:6px; align-items:center;
+    background:rgba(0,0,0,.35);
+    border:1px solid rgba(43,255,136,.25);
+    border-radius:8px; padding:4px 6px;
+    user-select:none; pointer-events:none;
+  }
+  .livesHud img{ width:18px; height:18px; image-rendering:auto; }
+  .blink{ animation: bl 0.12s linear infinite alternate; }
+  @keyframes bl { from{opacity:1} to{opacity:.35} }
 </style>
 </head>
-<body><h1>diominchia3333</h1>
+<body><h1>diominchittttttttttttta</h1>
   <main class="page">
     <!-- HERO -->
     <div class="hero" id="heroBox"></div>
@@ -136,6 +147,7 @@
       <div id="goal">Obiettivo: raggiungi un punteggio di <strong>666</strong> per superare il livello.</div>
       <div id="canvasWrap">
         <div id="scoreHud" class="scoreHud">0</div>
+        <div id="livesHud" class="livesHud"></div>
         <canvas id="runner" width="900" height="300"></canvas>
       </div>
       <div class="hud">Controlli: <strong>SPAZIO</strong> o <strong>↑</strong> (oppure tocca/tap). Punteggio: <span class="score" id="score">0</span></div>
@@ -235,7 +247,7 @@ document.addEventListener('DOMContentLoaded', () => {
   ;[f1,f2,f3].forEach(el=>el.addEventListener('keydown',e=>{ if(e.key==='Enter') submitRitual(); e.stopPropagation(); }));
 
   /* =========================
-     MINIGIOCO — Pumpkin Runner (con IMMAGINI + preload)
+     MINIGIOCO — Pumpkin Runner (IMMAGINI, vite, corsia alta)
      ========================= */
   const TARGET_SCORE = 666;
 
@@ -243,13 +255,15 @@ document.addEventListener('DOMContentLoaded', () => {
   const cvs = document.getElementById('runner'), ctx = cvs.getContext('2d');
   const scoreHudEl = document.getElementById('scoreHud');
   const scoreEl = document.getElementById('score');
+  const livesHud = document.getElementById('livesHud');
   const startBtn = document.getElementById('startGame'),
         restartBtn = document.getElementById('restartGame'),
         winMsg = document.getElementById('winMsg'),
         loadingMsg = document.getElementById('loadingMsg');
 
-  // Precarica immagini (giocatore + 4 mostri)
+  // Immagini
   const playerImg = new Image(); playerImg.src = 'media/zucca.png?v=1';
+  const heartImgSrc = 'media/heart.png';
   const monsterNames = ['mostro1.png','mostro2.png','mostro3.png','mostro4.png'];
   const monsterImgs = monsterNames.map(n => { const im=new Image(); im.src='media/'+n+'?v=1'; return im; });
 
@@ -264,21 +278,37 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Stato di gioco
   let running=false, gameOver=false, score=0, lastSpawn=0, lastTs=null;
-  let speed = 2.2;                // <<< più lento all'inizio
-  const MAX_SPEED = 7.5;
-  const ACCEL_PER_SEC = 0.6;      // incremento graduale nel tempo
+  let speed = 1.4;                // <<< molto lento all'inizio
+  const MAX_SPEED = 6.2;
+  const ACCEL_PER_SEC = 0.18;     // incremento molto graduale
 
   const ground = cvs.height - 40;
+  const airLaneY = ground - 150;  // corsia alta (nemici “in aria”)
   const player = { x:80, y:0, w:44, h:44, vy:0, onGround:true };
   player.y = ground - player.h;
 
-  const obstacles=[];
+  const obstacles=[]; // {x,y,w,h,img,type:'ground'|'air'}
+
+  // Vite
+  const MAX_LIVES = 3;
+  let lives = MAX_LIVES;
+  let invuln = 0;                 // secondi di invulnerabilità post-hit
+
+  function renderLives(){
+    livesHud.innerHTML='';
+    for(let i=0;i<MAX_LIVES;i++){
+      const im = document.createElement('img');
+      im.src = heartImgSrc;
+      if(i >= lives){ im.style.filter='grayscale(1) brightness(0.7)'; im.style.opacity='0.5'; }
+      livesHud.appendChild(im);
+    }
+  }
 
   // Fisica salto migliorata
-  const GRAVITY = 0.55;
-  const JUMP_VY = -11.6;
-  const COYOTE_TIME = 0.12;   // tempo dopo aver lasciato il terreno in cui puoi ancora saltare
-  const JUMP_BUFFER = 0.12;   // se premi poco prima di atterrare, salta appena tocchi terra
+  const GRAVITY = 0.54;
+  const JUMP_VY = -11.2;
+  const COYOTE_TIME = 0.12;
+  const JUMP_BUFFER = 0.14;
   let coyoteTimer = 0;
   let jumpBufferTimer = 0;
   let jumpHeld = false;
@@ -298,17 +328,32 @@ document.addEventListener('DOMContentLoaded', () => {
     const w = 46 + Math.random()*10;
     const ratio = (img && img.naturalWidth) ? (img.naturalHeight/img.naturalWidth) : 1.2;
     const h = w * ratio;
-    obstacles.push({ x:cvs.width+10, y:ground-h, w, h, img });
+    const type = Math.random() < 0.45 ? 'air' : 'ground'; // ~45% in alto, resto a terra
+    const y = (type==='ground') ? (ground-h) : (airLaneY - h/2);
+    obstacles.push({ x:cvs.width+10, y, w, h, img, type });
   }
 
   function drawImage(img, x,y,w,h){ if(img && img.complete && img.naturalWidth) ctx.drawImage(img,x,y,w,h); }
 
   function resetGame(){
-    running=false; gameOver=false; score=0; speed=2.2; lastTs=null; lastSpawn=0;
+    running=false; gameOver=false; score=0; speed=1.4; lastTs=null; lastSpawn=0;
     winMsg.style.display='none';
     obstacles.length=0; player.y=ground-player.h; player.vy=0; player.onGround=true;
     scoreHudEl.textContent='0'; scoreEl.textContent='0';
     coyoteTimer = 0; jumpBufferTimer = 0; jumpHeld = false;
+    invuln = 0; lives = MAX_LIVES; renderLives();
+    cvs.classList.remove('blink');
+  }
+
+  function hitPlayer(){
+    if(invuln > 0 || gameOver) return;
+    lives -= 1; renderLives();
+    invuln = 1.2; // 1.2s invulnerabile
+    cvs.classList.add('blink');
+    if(lives <= 0){
+      gameOver = true; running = false; cvs.classList.remove('blink');
+      document.getElementById('restartGame').style.display='inline-block';
+    }
   }
 
   function loop(ts){
@@ -318,26 +363,28 @@ document.addEventListener('DOMContentLoaded', () => {
     // Accelerazione dolce
     speed = Math.min(MAX_SPEED, speed + ACCEL_PER_SEC * delta);
 
-    // punteggio: ~2.2 punti/s di base; cresce un filo con la velocità
-    score += (2.2 + (speed-2.2)*0.3) * delta;
+    // punteggio: cresce lentamente, un filo colla velocità
+    score += (1.8 + (speed-1.4)*0.25) * delta;
     const shown = Math.floor(score);
     scoreHudEl.textContent = shown;
     scoreEl.textContent = shown;
 
     if(score >= TARGET_SCORE && !gameOver){
-      running=false; gameOver=true; winMsg.style.display='block'; restartBtn.style.display='inline-block';
+      running=false; gameOver=true; winMsg.style.display='block'; document.getElementById('restartGame').style.display='inline-block';
+      cvs.classList.remove('blink');
     }
 
     ctx.clearRect(0,0,cvs.width,cvs.height);
 
-    // terreno
+    // linee “pista” (terra & corsia alta)
     ctx.strokeStyle='rgba(43,255,136,.3)';
     ctx.beginPath(); ctx.moveTo(0,ground+0.5); ctx.lineTo(cvs.width,ground+0.5); ctx.stroke();
+    ctx.setLineDash([6,6]); ctx.beginPath(); ctx.moveTo(0,airLaneY+0.5); ctx.lineTo(cvs.width,airLaneY+0.5); ctx.stroke(); ctx.setLineDash([]);
 
-    // spawn ostacoli: frequenza si adatta alla velocità (mai sotto ~0.9s)
-    const baseInterval = 1800 - speed*120;             // diminuisce con speed
-    const jitter = 500 * Math.random();
-    const interval = Math.max(900, baseInterval + jitter);
+    // spawn ostacoli: adattivo, più rado e con jitter
+    const baseInterval = 2000 - speed*120;     // parte alto, scende piano
+    const jitter = 700 * Math.random();
+    const interval = Math.max(1100, baseInterval + jitter);
     if(ts - lastSpawn > interval){ spawnObstacle(); lastSpawn = ts; }
 
     // ostacoli
@@ -347,17 +394,15 @@ document.addEventListener('DOMContentLoaded', () => {
       drawImage(o.img, o.x, o.y, o.w, o.h);
       if(o.x + o.w < 0) obstacles.splice(i,1);
 
-      // collisione con hitbox più permissive
+      // collisione (hitbox permissive)
       const padP = 10, padO = 12;
       const px=player.x+padP, py=player.y+padP, pw=player.w-2*padP, ph=player.h-2*padP;
       const ox=o.x+padO, oy=o.y+padO, ow=o.w-2*padO, oh=o.h-2*padO;
-      if(px < ox + ow && px + pw > ox && py < oy + oh && py + ph > oy){
-        gameOver = true; running = false; restartBtn.style.display='inline-block';
-      }
+      const overlap = (px < ox + ow && px + pw > ox && py < oy + oh && py + ph > oy);
+      if(overlap){ hitPlayer(); }
     }
 
     // fisica player (coyote + buffer + salto variabile)
-    // gravità
     player.vy += GRAVITY;
     player.y += player.vy;
 
@@ -367,7 +412,7 @@ document.addEventListener('DOMContentLoaded', () => {
       if(!player.onGround){
         player.onGround = true;
         coyoteTimer = 0;
-        tryPerformJump(); // se avevi “bufferato” il salto prima di toccare
+        tryPerformJump();
       } else {
         player.onGround = true;
       }
@@ -381,15 +426,18 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     }
 
-    // salto variabile (rilasci = taglia la salita)
-    if(!jumpHeld && player.vy < -3){
-      player.vy = -3;
-    }
+    // salto variabile
+    if(!jumpHeld && player.vy < -3){ player.vy = -3; }
 
-    // aggiorna buffer
+    // timers
     jumpBufferTimer -= delta;
+    invuln -= delta;
+    if(invuln <= 0){ invuln = 0; cvs.classList.remove('blink'); }
 
-    drawImage(playerImg, player.x, player.y, player.w, player.h);
+    // draw player
+    if(!(invuln>0 && Math.floor(ts/60)%2===0)){ // piccolo lampeggio
+      drawImage(playerImg, player.x, player.y, player.w, player.h);
+    }
 
     requestAnimationFrame(loop);
   }
@@ -401,8 +449,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if(e.code==='Space' || e.code==='ArrowUp'){
       e.preventDefault();
+      if(gameOver){
+        // RIPARTI con spazio
+        resetGame(); await startGame(); return;
+      }
       jumpHeld = true;
-      if(!running && !gameOver){
+      if(!running){
         await startGame();
         requestJump(); // consenti salto immediato allo start
       } else {
@@ -418,7 +470,10 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   document.getElementById('runner').addEventListener('pointerdown', ()=>{
-    if(!running && !gameOver){
+    if(gameOver){
+      resetGame(); startGame(); return;
+    }
+    if(!running){
       startGame(); requestJump();
     } else {
       jumpHeld = true; requestJump(); tryPerformJump();
@@ -432,12 +487,15 @@ document.addEventListener('DOMContentLoaded', () => {
     loadingMsg.style.display='none';
 
     if(!running){
-      running = true; restartBtn.style.display='none'; requestAnimationFrame(loop);
+      running = true; document.getElementById('restartGame').style.display='none'; requestAnimationFrame(loop);
     }
   }
 
   document.getElementById('startGame').onclick = startGame;
   document.getElementById('restartGame').onclick = ()=>{ resetGame(); startGame(); };
+
+  // ready
+  renderLives();
 });
 </script>
 </body>
