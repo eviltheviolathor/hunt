@@ -37,6 +37,7 @@
      text-shadow:0 0 12px var(--accent), 0 0 28px var(--accent2); letter-spacing:.06em;}
   .sub{color:var(--muted); margin:0 0 clamp(12px,2vw,18px); font-size:clamp(14px,2vw,18px)}
 
+  /* Pannello combinazione */
   .panel{
     display:grid;
     grid-template-columns:repeat(auto-fit, minmax(min(220px, 42vw), 1fr));
@@ -73,22 +74,25 @@
   /* RITUALE */
   #rituale{display:none; width:100%; max-width:min(900px, 96vw); margin:clamp(16px,2.5vw,24px) auto 0}
   .rituale-text{margin:12px auto 20px; line-height:1.45; color:var(--fg); font-size:clamp(14px,2vw,18px)}
-  .pentacolo{position:relative; width:min(90vw,600px); height:min(90vw,600px); margin:0 auto 16px}
-  /* pentacolo rovesciato */
-  .pentacolo svg{transform:rotate(180deg)}
-  /* campi NON sovrapposti al pentacolo */
+
+  .pentacolo{position:relative; width:min(90vw,600px); height:min(90vw,600px); margin:0 auto 30px}
+  .pentacolo svg{transform:rotate(180deg)} /* rovesciato */
+
+  /* campi NON sovrapposti: uno sopra, due sotto */
   .rit-field{position:absolute; transform:translate(-50%,-50%);}
-  .rf-top   {left:50%; top:-6%;  width:60%;}
-  .rf-left  {left:15%; top:88%;  width:42%;}
-  .rf-right {left:85%; top:88%;  width:42%;}
+  .rf-top   {left:50%; top:-10%; width:70%;}
+  .rf-left  {left:25%; top:112%; width:45%;}
+  .rf-right {left:75%; top:112%; width:45%;}
   .rit-field input{width:100%; padding:10px 12px; border-radius:10px; border:2px solid rgba(43,255,136,.35);
                    background:rgba(10,10,10,.85); color:var(--fg); font-size:clamp(14px,2vw,16px)}
   .rit-btn{position:absolute; left:50%; top:50%; transform:translate(-50%,-50%)}
   .rit-msg{min-height:20px; margin-top:8px; font-size:1rem}
+
+  /* Mobile: tutti i campi sotto, in colonna */
   @media (max-width:700px){
     .rf-top   {left:50%; top:106%; width:92%;}
-    .rf-left  {left:50%; top:122%; width:92%;}
-    .rf-right {left:50%; top:138%; width:92%;}
+    .rf-left  {left:50%; top:124%; width:92%;}
+    .rf-right {left:50%; top:142%; width:92%;}
   }
 
   /* GIOCO */
@@ -103,7 +107,7 @@
 </head>
 <body>
   <main class="page">
-    <!-- Banner con fallback -->
+    <!-- Banner -->
     <div class="hero" id="heroBox"></div>
 
     <h1>Combinazione di Simboli</h1>
@@ -118,7 +122,7 @@
     <div id="message" class="msg"></div>
     <div class="footer" id="hintBox"></div>
 
-    <!-- Sezione rituale -->
+    <!-- RITUALE -->
     <section id="rituale">
       <p class="rituale-text" id="ritText"></p>
 
@@ -129,17 +133,16 @@
           <polygon points="50,6 61,40 96,40 67,60 78,94 50,73 22,94 33,60 4,40 39,40"
                    fill="none" stroke="rgba(43,255,136,.55)" stroke-width="2"/>
         </svg>
-        <!-- 3 campi NON sovrapposti -->
+        <!-- Campi fuori dal cerchio -->
         <div class="rit-field rf-top"><input id="f1" type="text" placeholder="Ingrediente I"></div>
         <div class="rit-field rf-left"><input id="f2" type="text" placeholder="Ingrediente II"></div>
         <div class="rit-field rf-right"><input id="f3" type="text" placeholder="Ingrediente III"></div>
-
         <button class="rit-btn" id="completeBtn">Completa</button>
       </div>
       <div id="ritMsg" class="rit-msg"></div>
     </section>
 
-    <!-- Gioco: si sblocca dopo il rituale -->
+    <!-- Gioco -->
     <section id="game">
       <h2>La Corsa della Zucca</h2>
       <div id="canvasWrap">
@@ -171,7 +174,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const SYMBOLS = Array.from({length:12}, (_,i) => ({ id:String(i+1), src:`./media/${i+1}.png` }));
   const TARGET = atob("MSwyLDMsNA==").split(","); // "1,2,3,4"
 
-  /* Suggerimento casuale */
+  /* Suggerimento */
   const HINTS = [
     "Spesso gli oggetti dei rituali si nascondono nelle stanze più buie.",
     "Le scope delle streghe nascondono sempre qualcosa.",
@@ -187,7 +190,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const gameSec = document.getElementById('game');
 
   let state = [];
-  let ritualeShown = false;
+  let ritualeShown = false; // evita testi doppi
 
   function renderSymbol(el, idx){
     el.innerHTML = '';
@@ -236,20 +239,33 @@ document.addEventListener("DOMContentLoaded", () => {
   document.getElementById('check').onclick   = check;
   build();
 
-  /* RITUALE — verifica per parole chiave (tollerante) */
-  const norm = (s) => s.normalize('NFD').replace(/\p{Diacritic}/gu,'').toLowerCase().replace(/[^\p{L}\p{N}\s]/gu,'').replace(/\s+/g,' ').trim();
-  const want = [
-    ['candela','nera'],
-    ['coltello','arrugginito','simbolo','bestia'],
-    ['peli','pubici','zombie','femmina']
-  ];
-  const hasAll = (words, input) => { const v = norm(input).split(' '); return words.every(w => v.includes(w)); };
+  /* RITUALE — verifica robusta */
+  const norm = (s) => s
+    .normalize('NFD').replace(/\p{Diacritic}/gu,'')   // togli accenti
+    .toLowerCase().replace(/[^\p{L}\p{N}\s]/gu,'')    // togli punteggiatura
+    .replace(/\s+/g,' ').trim();
 
-  document.getElementById('completeBtn').onclick = ()=>{
-    const ok =
-      hasAll(want[0], document.getElementById('f1').value) &&
-      hasAll(want[1], document.getElementById('f2').value) &&
-      hasAll(want[2], document.getElementById('f3').value);
+  const okCandle = (s)=>{
+    const v = norm(s);
+    return v.includes('candela') && (v.includes('nera') || v.includes('nero'));
+  };
+  const okKnife = (s)=>{
+    const v = norm(s);
+    const rust = v.includes('arrugginito') || v.includes('arrugginita') || v.includes('ossidato') || v.includes('ossidata') || v.includes('ruggine');
+    return v.includes('coltello') && rust && v.includes('simbolo') && v.includes('bestia');
+  };
+  const okHair = (s)=>{
+    const v = norm(s);
+    const hasPeli = v.includes('peli') || v.includes('pelo');
+    const pubici  = v.includes('pubici') || v.includes('pubico');
+    const femmina = v.includes('femmina') || v.includes('donna');
+    return hasPeli && pubici && v.includes('zombie') && femmina;
+  };
+
+  const submitRitual = ()=>{
+    const ok = okCandle(document.getElementById('f1').value) &&
+               okKnife (document.getElementById('f2').value) &&
+               okHair  (document.getElementById('f3').value);
 
     const box = document.getElementById('ritMsg');
     if(ok){
@@ -263,6 +279,14 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   };
 
+  document.getElementById('completeBtn').onclick = submitRitual;
+  // Invio da tastiera
+  ['f1','f2','f3'].forEach(id=>{
+    document.getElementById(id).addEventListener('keydown', e=>{
+      if(e.key==='Enter'){ submitRitual(); }
+    });
+  });
+
   /* =========================
      MINIGIOCO — Pumpkin Runner
      ========================= */
@@ -274,9 +298,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   let running=false, gameOver=false, score=0, lastSpawn=0, speed=6;
   const ground = cvs.height - 40;
-
   const player = { x: 80, y: ground-32, w: 36, h: 36, vy: 0, onGround: true };
-
   const obstacles = [];
 
   function spawnObstacle(){
@@ -284,21 +306,13 @@ document.addEventListener("DOMContentLoaded", () => {
     const h = 40 + Math.random()*60;
     obstacles.push({ x:cvs.width+10, y:ground-h, w, h });
   }
-
   function drawPumpkin(p){
-    // corpo
     ctx.fillStyle = 'var(--pumpkin)';
-    ctx.beginPath();
-    ctx.ellipse(p.x + p.w/2, p.y + p.h/2, p.w/2, p.h/2, 0, 0, Math.PI*2);
-    ctx.fill();
-    // gambo
-    ctx.fillStyle = '#7a5c2e';
-    ctx.fillRect(p.x + p.w/2 - 3, p.y - 6, 6, 8);
-    // occhi
+    ctx.beginPath(); ctx.ellipse(p.x + p.w/2, p.y + p.h/2, p.w/2, p.h/2, 0, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#7a5c2e'; ctx.fillRect(p.x + p.w/2 - 3, p.y - 6, 6, 8);
     ctx.fillStyle = '#000';
     ctx.beginPath(); ctx.moveTo(p.x+10, p.y+14); ctx.lineTo(p.x+18, p.y+8); ctx.lineTo(p.x+22, p.y+18); ctx.closePath(); ctx.fill();
     ctx.beginPath(); ctx.moveTo(p.x+p.w-10, p.y+14); ctx.lineTo(p.x+p.w-18, p.y+8); ctx.lineTo(p.x+p.w-22, p.y+18); ctx.closePath(); ctx.fill();
-    // bocca
     ctx.beginPath();
     ctx.moveTo(p.x+10, p.y+p.h-12);
     ctx.lineTo(p.x+16, p.y+p.h-8);
@@ -309,12 +323,9 @@ document.addEventListener("DOMContentLoaded", () => {
     ctx.lineTo(p.x+46, p.y+p.h-12);
     ctx.fill();
   }
-
   function drawGravestone(o){
     ctx.fillStyle = 'var(--stone)';
-    // base
     ctx.fillRect(o.x, o.y + o.h - 8, o.w, 8);
-    // lapide arrotondata
     ctx.beginPath();
     ctx.moveTo(o.x, o.y + o.h - 8);
     ctx.lineTo(o.x, o.y + 12);
@@ -323,73 +334,37 @@ document.addEventListener("DOMContentLoaded", () => {
     ctx.closePath();
     ctx.fill();
   }
-
   function resetGame(){
     running=false; gameOver=false; score=0; speed=6;
-    obstacles.length=0;
-    player.y = ground-32; player.vy=0; player.onGround=true;
+    obstacles.length=0; player.y = ground-32; player.vy=0; player.onGround=true;
     scoreEl.textContent = '0';
   }
-
   function jump(){
     if(!running || gameOver) return;
-    if(player.onGround){
-      player.vy = -12.5;
-      player.onGround = false;
-    }
+    if(player.onGround){ player.vy = -12.5; player.onGround = false; }
   }
-
   function loop(ts){
     if(!running) return;
-
     ctx.clearRect(0,0,cvs.width,cvs.height);
-
-    // terreno
-    ctx.strokeStyle = 'rgba(43,255,136,.3)';
-    ctx.beginPath(); ctx.moveTo(0, ground+0.5); ctx.lineTo(cvs.width, ground+0.5); ctx.stroke();
-
-    // spawn ostacoli
+    ctx.strokeStyle = 'rgba(43,255,136,.3)'; ctx.beginPath(); ctx.moveTo(0, ground+0.5); ctx.lineTo(cvs.width, ground+0.5); ctx.stroke();
     if(ts - lastSpawn > 1300){ spawnObstacle(); lastSpawn = ts; if(speed < 10) speed += 0.05; }
-
-    // aggiorna e disegna ostacoli
     for(let i=obstacles.length-1;i>=0;i--){
-      const o = obstacles[i];
-      o.x -= speed;
-      drawGravestone(o);
+      const o = obstacles[i]; o.x -= speed; drawGravestone(o);
       if(o.x + o.w < 0) obstacles.splice(i,1);
-      // collisione AABB
-      if(player.x < o.x + o.w && player.x + player.w > o.x &&
-         player.y < o.y + o.h && player.y + player.h > o.y){
-        gameOver = true; running = false;
-        restartBtn.style.display = 'inline-block';
+      if(player.x < o.x + o.w && player.x + player.w > o.x && player.y < o.y + o.h && player.y + player.h > o.y){
+        gameOver = true; running = false; restartBtn.style.display = 'inline-block';
       }
     }
-
-    // fisica player
-    player.vy += 0.7;             // gravità
-    player.y += player.vy;
-    if(player.y + player.h >= ground){
-      player.y = ground - player.h;
-      player.vy = 0;
-      player.onGround = true;
-    }
-
+    player.vy += 0.7; player.y += player.vy;
+    if(player.y + player.h >= ground){ player.y = ground - player.h; player.vy = 0; player.onGround = true; }
     drawPumpkin(player);
-
-    // punteggio
-    score += 0.1;
-    scoreEl.textContent = Math.floor(score);
-
+    score += 0.1; scoreEl.textContent = Math.floor(score);
     requestAnimationFrame(loop);
   }
-
-  // input
   window.addEventListener('keydown', (e)=>{ if(e.code==='Space' || e.code==='ArrowUp'){ e.preventDefault(); jump(); } });
   cvs.addEventListener('pointerdown', jump);
-
-  startBtn.onclick = ()=>{ if(!running && !gameOver){ running = true; restartBtn.style.display='none'; lastSpawn=performance.now(); requestAnimationFrame(loop);} };
-  restartBtn.onclick= ()=>{ resetGame(); running = true; restartBtn.style.display='none'; lastSpawn=performance.now(); requestAnimationFrame(loop); };
-
+  document.getElementById('startGame').onclick = ()=>{ if(!running && !gameOver){ running = true; restartBtn.style.display='none'; lastSpawn=performance.now(); requestAnimationFrame(loop);} };
+  document.getElementById('restartGame').onclick= ()=>{ resetGame(); running = true; this?.style && (this.style.display='none'); lastSpawn=performance.now(); requestAnimationFrame(loop); };
 });
 </script>
 </body>
