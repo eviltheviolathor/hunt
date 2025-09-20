@@ -10,7 +10,6 @@
   :root{
     --bg:#050505; --fg:#e6e6e6; --muted:#9aa0a6;
     --accent:#2bff88; --accent2:#6bffda;
-    --pumpkin:#ff7a18; --stone:#5de6b3;
     --card:#0d0d0d; --ok:#22c55e; --err:#ff4d4d;
   }
   *{box-sizing:border-box}
@@ -52,18 +51,16 @@
   .pentacolo{position:relative;width:min(90vw,600px);height:min(90vw,600px);margin:0 auto 24px}
   .pentacolo svg{transform:rotate(180deg)} /* rovesciato */
 
-  /* *** campi SUL pentacolo (sopra, centro, sotto) *** */
+  /* campi SUL pentacolo: sopra / centro / sotto */
   .rit-field{position:absolute;transform:translate(-50%,-50%)}
   .rf-top    {left:50%; top:22%;  width:66%;}
   .rf-mid    {left:50%; top:50%;  width:60%;}
   .rf-bottom {left:50%; top:78%;  width:66%;}
-
   .rit-field input{width:100%;padding:10px 12px;border-radius:10px;border:2px solid rgba(43,255,136,.35);background:rgba(10,10,10,.85);color:var(--fg);font-size:clamp(14px,2vw,16px)}
-  .rit-btn{position:absolute;left:50%;top:62%;transform:translate(-50%,-50%)} /* bottone leggermente sopra il centro */
+  .rit-btn{position:absolute;left:50%;top:62%;transform:translate(-50%,-50%)}
   .rit-msg{min-height:20px;margin-top:8px;font-size:1rem}
 
   @media (max-width:700px){
-    /* su mobile li metto sotto, in colonna */
     .rf-top   {left:50%; top:106%; width:92%;}
     .rf-mid   {left:50%; top:124%; width:92%;}
     .rf-bottom{left:50%; top:142%; width:92%;}
@@ -110,7 +107,7 @@
             <circle cx="50" cy="50" r="45" fill="none" stroke="rgba(43,255,136,.35)" stroke-width="2"/>
             <polygon points="50,6 61,40 96,40 67,60 78,94 50,73 22,94 33,60 4,40 39,40" fill="none" stroke="rgba(43,255,136,.55)" stroke-width="2"/>
           </svg>
-          <!-- Campi SUL pentacolo (sopra / centro / sotto) -->
+          <!-- Campi SUL pentacolo -->
           <div class="rit-field rf-top"><input id="f1" type="text" placeholder="Ingrediente (sopra)"></div>
           <div class="rit-field rf-mid"><input id="f2" type="text" placeholder="Ingrediente (centro)"></div>
           <div class="rit-field rf-bottom"><input id="f3" type="text" placeholder="Ingrediente (sotto)"></div>
@@ -127,15 +124,9 @@
       <h2>La Corsa della Zucca</h2>
       <div id="goal">Obiettivo: raggiungi un punteggio di <strong>666</strong> per superare il livello.</div>
       <div id="canvasWrap"><canvas id="runner" width="900" height="300"></canvas></div>
-      <div class="hud">
-        Controlli: <strong>SPAZIO</strong> o <strong>↑</strong> (oppure tocca/tap). Punteggio:
-        <span class="score" id="score">0</span>
-      </div>
+      <div class="hud">Controlli: <strong>SPAZIO</strong> o <strong>↑</strong> (oppure tocca/tap). Punteggio: <span class="score" id="score">0</span></div>
       <div class="win" id="winMsg" style="display:none">✦ Hai domato la Zucca! Livello superato. ✦</div>
-      <div class="cta" style="margin-top:10px">
-        <button id="startGame">Avvia</button>
-        <button id="restartGame" style="display:none">Riprova</button>
-      </div>
+      <div class="cta" style="margin-top:10px"><button id="startGame">Avvia</button> <button id="restartGame" style="display:none">Riprova</button></div>
     </section>
   </main>
 
@@ -197,7 +188,7 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('check').onclick=check;
   build();
 
-  /* ===== RITUALE — riconoscimento ordine LIBERO ===== */
+  /* ===== RITUALE — ordine libero ===== */
   const norm=(s)=>s.normalize('NFD').replace(/\p{Diacritic}/gu,'').toLowerCase().replace(/[^\p{L}\p{N}\s]/gu,'').replace(/\s+/g,' ').trim();
   function classify(text){
     const v=norm(text); if(!v) return null;
@@ -230,64 +221,76 @@ document.addEventListener('DOMContentLoaded', () => {
   ;[f1,f2,f3].forEach(el=>el.addEventListener('keydown',e=>{ if(e.key==='Enter') submitRitual(); e.stopPropagation(); }));
 
   /* =========================
-     MINIGIOCO — Pumpkin Runner
+     MINIGIOCO — Pumpkin Runner (con IMMAGINI)
      ========================= */
   const TARGET_SCORE = 666; // ≈ 5 minuti
   const cvs=document.getElementById('runner'), ctx=cvs.getContext('2d');
   const scoreEl=document.getElementById('score'), startBtn=document.getElementById('startGame'),
         restartBtn=document.getElementById('restartGame'), winMsg=document.getElementById('winMsg');
 
-  let running=false, gameOver=false, score=0, lastSpawn=0, speed=5, lastTs=null, startTs=null;
-  const ground=cvs.height-40, player={x:80,y:ground-32,w:36,h:36,vy:0,onGround:true}, obstacles=[];
+  // Precarica immagini
+  const playerImg = new Image(); playerImg.src = 'media/zucca.png';
+  const obstacleNames = ['mostro1.png','mostro2.png','mostro3.png','mostro4.png'];
+  const obstacleImgs = obstacleNames.map(n => { const im=new Image(); im.src='media/'+n; return im; });
 
-  function spawnObstacle(){ const w=26+Math.random()*18, h=40+Math.random()*60; obstacles.push({ x:cvs.width+10, y:ground-h, w, h }); }
-  function drawPumpkin(p){
-    ctx.fillStyle='var(--pumpkin)'; ctx.beginPath(); ctx.ellipse(p.x+p.w/2,p.y+p.h/2,p.w/2,p.h/2,0,0,Math.PI*2); ctx.fill();
-    ctx.fillStyle='#7a5c2e'; ctx.fillRect(p.x+p.w/2-3,p.y-6,6,8);
-    ctx.fillStyle='#000'; ctx.beginPath(); ctx.moveTo(p.x+10,p.y+14); ctx.lineTo(p.x+18,p.y+8); ctx.lineTo(p.x+22,p.y+18); ctx.closePath(); ctx.fill();
-    ctx.beginPath(); ctx.moveTo(p.x+p.w-10,p.y+14); ctx.lineTo(p.x+p.w-18,p.y+8); ctx.lineTo(p.x+p.w-22,p.y+18); ctx.closePath(); ctx.fill();
-    ctx.beginPath(); ctx.moveTo(p.x+10,p.y+p.h-12); ctx.lineTo(p.x+16,p.y+p.h-8); ctx.lineTo(p.x+22,p.y+p.h-12);
-    ctx.lineTo(p.x+28,p.y+p.h-8); ctx.lineTo(p.x+34,p.y+p.h-12); ctx.lineTo(p.x+40,p.y+p.h-8); ctx.lineTo(p.x+46,p.y+p.h-12); ctx.fill();
+  let running=false, gameOver=false, score=0, lastSpawn=0, speed=5, lastTs=null;
+  const ground=cvs.height-40;
+  const player={x:80,y:ground-48,w:48,h:48,vy:0,onGround:true};
+
+  const obstacles=[];
+
+  function spawnObstacle(){
+    const img = obstacleImgs[Math.floor(Math.random()*obstacleImgs.length)];
+    // scala base: 56px di larghezza, proporzionale
+    const baseW = 56;
+    const ratio = (img && img.naturalWidth) ? (img.naturalHeight / img.naturalWidth) : 1.2;
+    const w = baseW + Math.random()*14;
+    const h = w * ratio;
+    obstacles.push({ x:cvs.width+10, y:ground-h, w, h, img });
   }
-  function drawGravestone(o){
-    ctx.fillStyle='var(--stone)'; ctx.fillRect(o.x,o.y+o.h-8,o.w,8);
-    ctx.beginPath(); ctx.moveTo(o.x,o.y+o.h-8); ctx.lineTo(o.x,o.y+12);
-    ctx.quadraticCurveTo(o.x+o.w/2,o.y-10,o.x+o.w,o.y+12); ctx.lineTo(o.x+o.w,o.y+o.h-8); ctx.closePath(); ctx.fill();
+
+  function drawImageOrFallback(img, x,y,w,h){
+    if(img && img.complete && img.naturalWidth){
+      ctx.drawImage(img, x, y, w, h);
+    }else{
+      // fallback: rettangolo “spettrale”
+      ctx.fillStyle='rgba(109,255,210,.9)';
+      ctx.fillRect(x, y, w, h);
+    }
   }
+
   function resetGame(){
-    running=false; gameOver=false; score=0; speed=5; lastTs=null; startTs=null; lastSpawn=0; winMsg.style.display='none';
-    obstacles.length=0; player.y=ground-32; player.vy=0; player.onGround=true; scoreEl.textContent='0';
+    running=false; gameOver=false; score=0; speed=5; lastTs=null; lastSpawn=0; winMsg.style.display='none';
+    obstacles.length=0; player.y=ground-player.h; player.vy=0; player.onGround=true; scoreEl.textContent='0';
   }
+
   function jump(){ if(!running||gameOver) return; if(player.onGround){ player.vy=-12.5; player.onGround=false; } }
 
   function loop(ts){
     if(!running) return;
-    if(startTs===null) startTs = ts;
-    const delta = lastTs ? (ts-lastTs)/1000 : 0;  // sec
-    lastTs = ts;
+    const delta = lastTs ? (ts-lastTs)/1000 : 0; lastTs = ts;
 
-    // score: 2.2 punti / secondo -> 666 ≈ 303s ≈ 5.05 min
+    // score ~ 2.2 punti/s -> 666 ≈ 5.05 min
     score += 2.2 * delta;
     scoreEl.textContent = Math.floor(score);
 
-    // win condition
     if(score >= TARGET_SCORE && !gameOver){
-      running = false; gameOver = true; winMsg.style.display='block';
-      restartBtn.style.display='inline-block';
+      running = false; gameOver = true; winMsg.style.display='block'; restartBtn.style.display='inline-block';
     }
 
-    // clear
     ctx.clearRect(0,0,cvs.width,cvs.height);
 
     // terreno
-    ctx.strokeStyle='rgba(43,255,136,.3)'; ctx.beginPath(); ctx.moveTo(0,ground+0.5); ctx.lineTo(cvs.width,ground+0.5); ctx.stroke();
+    ctx.strokeStyle='rgba(43,255,136,.3)';
+    ctx.beginPath(); ctx.moveTo(0,ground+0.5); ctx.lineTo(cvs.width,ground+0.5); ctx.stroke();
 
-    // spawn ostacoli (ogni ~1.4s)
+    // spawn ostacoli ~1.4s
     if(ts - lastSpawn > 1400){ spawnObstacle(); lastSpawn = ts; if(speed < 11) speed += 0.03; }
 
     // ostacoli
     for(let i=obstacles.length-1;i>=0;i--){
-      const o=obstacles[i]; o.x -= speed; drawGravestone(o);
+      const o=obstacles[i]; o.x -= speed;
+      drawImageOrFallback(o.img, o.x, o.y, o.w, o.h);
       if(o.x + o.w < 0) obstacles.splice(i,1);
       // collisione
       if(player.x < o.x + o.w && player.x + player.w > o.x &&
@@ -301,7 +304,8 @@ document.addEventListener('DOMContentLoaded', () => {
     player.y += player.vy;
     if(player.y + player.h >= ground){ player.y = ground - player.h; player.vy = 0; player.onGround = true; }
 
-    drawPumpkin(player);
+    // disegna player
+    drawImageOrFallback(playerImg, player.x, player.y, player.w, player.h);
 
     requestAnimationFrame(loop);
   }
