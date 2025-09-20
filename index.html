@@ -3,74 +3,60 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Rituale — Combinazione di Simboli</title>
+<title>Il Rituale — Combinazione di Simboli</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700&display=swap');
 
   :root{
-    --bg:#050505;
-    --fg:#e6e6e6;
-    --muted:#9aa0a6;
-    --accent:#2bff88;
-    --accent2:#6bffda;
-    --card:#0d0d0d;
-    --ok:#22c55e;
-    --err:#ff4d4d;
+    --bg:#050505; --fg:#e6e6e6; --muted:#9aa0a6;
+    --accent:#2bff88; --accent2:#6bffda;
+    --card:#0d0d0d; --ok:#22c55e; --err:#ff4d4d;
   }
 
   *{box-sizing:border-box}
 
   html,body{
-    height:100%;
-    margin:0;
+    height:100%; margin:0;
     background:radial-gradient(circle at 50% 15%, #111 0%, #000 80%);
-    color:var(--fg);
-    font-family:'Cinzel Decorative', serif;
+    color:var(--fg); font-family:'Cinzel Decorative', serif;
   }
 
-  /* CENTRATURA REALE */
+  /* CONTENITORE */
   .page{
-    min-height:100vh;
-    max-width:1600px;
-    margin:0 auto;                 /* centra orizzontale */
-    padding:48px 24px 56px;
-    display:flex;
-    flex-direction:column;
-    align-items:center;            /* centra il contenuto nella colonna */
-    justify-content:flex-start;
-    text-align:center;
+    min-height:100vh; max-width:1600px; margin:0 auto;
+    padding:28px 24px 56px;
+    display:flex; flex-direction:column; align-items:center;
+    justify-content:flex-start; text-align:center;
   }
+
+  /* BANNER */
+  .hero{
+    width:100%; max-width:1400px; margin:0 auto 18px;
+    display:flex; justify-content:center;
+  }
+  .hero img{ width:100%; height:auto; display:block; border-radius:10px; }
 
   h1{
-    font-size:clamp(28px,4vw,48px);
-    margin:0 0 8px;
-    letter-spacing:.08em;
+    font-size:clamp(28px,4vw,48px); margin:12px 0 8px; letter-spacing:.08em;
     color:var(--accent);
     text-shadow:0 0 12px var(--accent), 0 0 28px var(--accent2);
   }
   .sub{ color:var(--muted); margin:0 0 26px; font-size:1.05rem; }
 
+  /* PANNELLO COMBINAZIONE */
   .panel{
-    display:grid;
-    grid-template-columns:repeat(4, minmax(320px, 1fr));
-    gap:28px;
-    width:100%;
-    max-width:1400px;
-    padding:24px;
-    border-radius:20px;
+    display:grid; grid-template-columns:repeat(4, minmax(320px, 1fr));
+    gap:28px; width:100%; max-width:1400px; padding:24px;
+    border-radius:20px; margin:0 auto;
     background:rgba(20,20,20,0.85);
     box-shadow:0 0 40px rgba(43,255,136,.25), inset 0 0 20px rgba(43,255,136,.15);
-    margin:0 auto;                 /* centra la griglia */
   }
 
   .slot{
     background:radial-gradient(300px 300px at 50% 30%, rgba(43,255,136,.08), transparent 70%), var(--card);
-    border:2px solid rgba(43,255,136,.3);
-    border-radius:22px;
-    padding:18px;
+    border:2px solid rgba(43,255,136,.3); border-radius:22px; padding:18px;
     display:flex; align-items:center; justify-content:center; gap:14px;
-    min-height:340px;
-    box-shadow:inset 0 0 20px rgba(43,255,136,.15);
+    min-height:340px; box-shadow:inset 0 0 20px rgba(43,255,136,.15);
   }
 
   .symbol{
@@ -84,28 +70,25 @@
   .symbol img{ width:280px; height:280px; object-fit:contain; display:block; }
 
   .fallback{
-    width:100%; height:100%;
-    display:flex; align-items:center; justify-content:center;
+    width:100%; height:100%; display:flex; align-items:center; justify-content:center;
     color:var(--accent2); font-size:0.95rem; padding:10px; text-wrap:balance;
     background:rgba(0,0,0,.4);
   }
 
   .arrow{
     width:60px; height:60px; display:flex; align-items:center; justify-content:center;
-    font-size:32px; user-select:none;
-    background:rgba(30,30,30,.8);
-    border:1px solid rgba(43,255,136,.3);
-    border-radius:12px; cursor:pointer; color:var(--fg);
+    font-size:32px; user-select:none; cursor:pointer; color:var(--fg);
+    background:rgba(30,30,30,.8); border:1px solid rgba(43,255,136,.3); border-radius:12px;
     transition:all .2s ease;
   }
   .arrow:hover{ background:rgba(43,255,136,.15); }
 
   .action{ margin:26px 0 8px; display:flex; gap:14px; justify-content:center; }
   button{
-    appearance:none; border:0; cursor:pointer;
-    border-radius:12px; padding:12px 18px; font-weight:700;
+    appearance:none; border:0; cursor:pointer; border-radius:12px;
+    padding:12px 18px; font-weight:700; font-size:1rem;
     background:rgba(30,30,30,.9); color:var(--fg); border:2px solid rgba(43,255,136,.3);
-    font-family:'Cinzel Decorative', serif; font-size:1rem; transition:all .2s ease;
+    font-family:'Cinzel Decorative', serif; transition:all .2s ease;
   }
   button:hover{ background:rgba(43,255,136,.15); }
 
@@ -113,24 +96,52 @@
   .success{ color:var(--ok); text-shadow:0 0 10px var(--ok); }
   .fail{ color:var(--err); text-shadow:0 0 8px var(--err); }
 
-  .footer{
-    margin-top:24px; color:var(--accent2); font-size:1.1rem;
-    text-shadow:0 0 6px rgba(43,255,136,.35);
-  }
+  .footer{ margin-top:24px; color:var(--accent2); font-size:1.1rem;
+    text-shadow:0 0 6px rgba(43,255,136,.35); }
 
-  @media (max-width:1200px){
-    .panel{ grid-template-columns:repeat(2, minmax(320px, 1fr)); }
+  /* BLOCCO RITUALE */
+  #rituale{ display:none; width:100%; max-width:1100px; margin:28px auto 0; }
+  .rituale-text{
+    margin:18px auto 22px; line-height:1.5; color:var(--fg); max-width:1000px;
+    text-shadow:0 0 8px rgba(43,255,136,.2);
   }
-  @media (max-width:680px){
-    .panel{ grid-template-columns:1fr; }
+  .pentacolo{
+    position:relative; width:min(90vw, 800px); height:min(90vw, 800px);
+    margin:0 auto 16px;
   }
+  /* posizioniamo i 3 input su 3 punte */
+  .rit-field{
+    position:absolute; transform:translate(-50%, -50%);
+    width:min(60vw, 360px);
+  }
+  .rit-field input{
+    width:100%; padding:12px 14px; border-radius:12px;
+    border:2px solid rgba(43,255,136,.35); background:rgba(10,10,10,.85);
+    color:var(--fg); font-family:'Cinzel Decorative', serif; font-size:1rem;
+    box-shadow:inset 0 0 12px rgba(43,255,136,.12);
+  }
+  .rit-btn{
+    position:absolute; left:50%; top:50%; transform:translate(-50%, -50%);
+    z-index:3;
+  }
+  .rit-msg{ min-height:28px; margin-top:8px; }
+
+  /* Responsivo */
+  @media (max-width:1200px){ .panel{ grid-template-columns:repeat(2, minmax(320px, 1fr)); } }
+  @media (max-width:680px){ .panel{ grid-template-columns:1fr; } }
 </style>
 </head>
 <body>
   <main class="page">
+    <!-- BANNER IN ALTO -->
+    <div class="hero">
+      <img src="media/home.png" alt="Il Rituale">
+    </div>
+
     <h1>Combinazione di Simboli</h1>
     <p class="sub">Allinea i quattro simboli corretti per risvegliare l'oscuro portale.</p>
 
+    <!-- PANNELLO COMBINAZIONE -->
     <section class="panel" id="panel"></section>
 
     <div class="action">
@@ -140,37 +151,83 @@
     <div id="message" class="msg"></div>
 
     <div class="footer" id="hintBox"></div>
+
+    <!-- BLOCCO DEL RITUALE (nascosto finché non risolvono la combinazione) -->
+    <section id="rituale">
+      <p class="rituale-text">
+        <strong>Bene, molto bene.</strong> Quindi Herr Knock ti ha insegnato molto.
+        Per procedere con il rituale è fondamentale trovare i tre ingredienti per
+        <em>Evocare il Principe delle Tenebre</em>. Credo che tu possa trovarli all'interno del server,
+        ma non sarà facile.
+      </p>
+
+      <!-- Pentacolo SVG + input -->
+      <div class="pentacolo">
+        <!-- pentacolo -->
+        <svg viewBox="0 0 100 100" width="100%" height="100%" aria-hidden="true" style="position:absolute;left:0;top:0;filter:drop-shadow(0 0 10px rgba(43,255,136,.35));">
+          <circle cx="50" cy="50" r="45" fill="none" stroke="rgba(43,255,136,.35)" stroke-width="2"/>
+          <polygon points="50,6 61,40 96,40 67,60 78,94 50,73 22,94 33,60 4,40 39,40"
+                   fill="none" stroke="rgba(43,255,136,.55)" stroke-width="2"/>
+        </svg>
+
+        <!-- Input su 3 punte (top, bottom-left, bottom-right) -->
+        <div class="rit-field" style="left:50%; top:10%;">
+          <input id="f1" type="text" placeholder="Ingrediente I">
+        </div>
+        <div class="rit-field" style="left:20%; top:75%;">
+          <input id="f2" type="text" placeholder="Ingrediente II">
+        </div>
+        <div class="rit-field" style="left:80%; top:75%;">
+          <input id="f3" type="text" placeholder="Ingrediente III">
+        </div>
+
+        <!-- Bottone al centro -->
+        <button class="rit-btn" id="completeBtn">Completa</button>
+      </div>
+
+      <div id="ritMsg" class="rit-msg"></div>
+    </section>
+
+    <!-- Sezione prossima fase (la riempiremo dopo) -->
+    <section id="nextStep" style="display:none; margin-top:22px;">
+      <!-- TODO: contenuto step successivo -->
+    </section>
   </main>
 
 <script>
-/* ========== CONFIGURAZIONE ========== */
-/* Le 12 immagini devono essere in:  /media/1.png ... /media/12.png
-   ATTENZIONE a:
-   - nome esatto (maiuscole/minuscole su GitHub Pages contano)
-   - estensione .png davvero (non .PNG o .webp)
-   - cartella realmente 'media' nella root del sito
-*/
+/* =======================
+   IMMAGINI SIMBOLI (1..12)
+   ======================= */
 const SYMBOLS = Array.from({length:12}, (_,i) => {
   const num = i+1;
-  const src = `./media/${num}.png`; // path relativo alla pagina
+  const src = `./media/${num}.png`; // path relativo
   return { id: String(num), src };
 });
 
-// Sequenza corretta
-const TARGET = ['1','2','3','4'];
+/* ==========================================
+   COMBINAZIONE "OFFUSCATA" (non in chiaro)
+   ==========================================
+   "1,2,3,4" -> Base64 -> MSwyLDMsNA==
+*/
+const TARGET = atob("MSwyLDMsNA==").split(",");
 
-// Suggerimenti random
+/* =======================
+   SUGGERIMENTO CASUALE
+   ======================= */
 const HINTS = [
   "Spesso gli oggetti dei rituali si nascondono nelle stanze più buie.",
   "Le scope delle streghe nascondono sempre qualcosa.",
   "Una volta ho sentito la storia di una \"casa del dolore\", forse si parlava di qualcosa di interessante?"
 ];
 
-/* ========== LOGICA ========== */
+/* =======================
+   LOGICA INTERFACCIA (puzzle)
+   ======================= */
 const panel   = document.getElementById('panel');
 const message = document.getElementById('message');
 const hintBox = document.getElementById('hintBox');
-let state = [];
+const rituale = document.getElementById('rituale');
+let state = []; // indici selezionati nei 4 slot
 
 function createSlot(i){
   const wrap = document.createElement('div');
@@ -205,16 +262,14 @@ function createSlot(i){
 
 function renderSymbol(el, idx){
   const {src} = SYMBOLS[idx];
-  el.innerHTML = ''; // pulisci
+  el.innerHTML = '';
   const img = document.createElement('img');
-  img.src = src;
-  img.alt = `simbolo ${idx+1}`;
-  img.onerror = () => {               // Fallback di debug se l'immagine manca
+  img.src = src; img.alt = `simbolo ${idx+1}`;
+  img.onerror = () => {
     const fb = document.createElement('div');
     fb.className = 'fallback';
     fb.textContent = 'MANCANTE: ' + src;
-    el.innerHTML = '';
-    el.appendChild(fb);
+    el.innerHTML = ''; el.appendChild(fb);
   };
   el.appendChild(img);
 }
@@ -235,19 +290,58 @@ function check(){
   const ok = pickedIds.length === TARGET.length && pickedIds.every((id, i)=> id === TARGET[i]);
   if(ok){
     message.className = 'msg success';
-    message.textContent = 'bravo';
+    message.textContent = 'Bene, molto bene. Quindi Herr Knock ti ha insegnato molto. Per procedere con il rituale è fondamentale trovare i tre ingredienti per Evocare il Principe delle Tenebre. Credo che tu possa trovarli all'interno del server, ma non sarà facile.';
+    rituale.style.display = 'block'; // sblocca la sezione del rituale
+    // scrolla al rituale
+    rituale.scrollIntoView({behavior:'smooth', block:'start'});
   } else {
     message.className = 'msg fail';
     message.textContent = 'sbagliato';
   }
 }
 
-// Avvio
+/* =======================
+   LOGICA RITUALE (3 CAMPI)
+   ======================= */
+const answers = [
+  "Candela Nera",
+  "Coltello Arrugginito con il Simbolo della Bestia",
+  "Peli Pubici di Zombie Femmina"
+];
+
+function norm(s){
+  return s.trim().toLowerCase().replace(/\s+/g,' ');
+}
+
+document.getElementById('completeBtn').addEventListener('click', ()=>{
+  const v1 = norm(document.getElementById('f1').value);
+  const v2 = norm(document.getElementById('f2').value);
+  const v3 = norm(document.getElementById('f3').value);
+
+  const ok =
+    v1 === norm(answers[0]) &&
+    v2 === norm(answers[1]) &&
+    v3 === norm(answers[2]);
+
+  const box = document.getElementById('ritMsg');
+  if(ok){
+    box.className = 'rit-msg success';
+    box.textContent = 'Il cerchio si illumina... (la prossima parte si sbloccherà qui)';
+    // mostra placeholder prossima sezione (vuota per ora)
+    document.getElementById('nextStep').style.display = 'block';
+    document.getElementById('nextStep').innerHTML = '<p style="color:var(--accent);text-shadow:0 0 10px var(--accent)">[Prossima fase del rituale — da aggiungere]</p>';
+  }else{
+    box.className = 'rit-msg fail';
+    box.textContent = 'La formula non risponde. Forse hai sbagliato gli ingredienti...';
+  }
+});
+
+/* AVVIO */
 document.getElementById('shuffle').addEventListener('click', shuffle);
 document.getElementById('check').addEventListener('click', check);
 build();
 
-// Suggerimento casuale
+// Suggerimento random a ogni refresh
 hintBox.textContent = "Suggerimento: " + HINTS[Math.floor(Math.random()*HINTS.length)];
 </script>
 </body>
