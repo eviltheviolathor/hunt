@@ -17,39 +17,39 @@
     font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial;
     display:flex; align-items:center; justify-content:center;
   }
-  .wrap{ width:min(1400px, 96vw); text-align:center; }
-  h1{ font-size:clamp(24px,3vw,36px); margin:0 0 6px; letter-spacing:.04em; }
+  .wrap{ width:min(1600px, 96vw); text-align:center; }
+  h1{ font-size:clamp(24px,3vw,38px); margin:0 0 6px; letter-spacing:.04em; }
   .sub{ color:var(--muted); margin:0 0 20px; }
   .panel{
-    display:grid; grid-template-columns:repeat(4, 1fr); gap:20px;
-    padding:20px; border-radius:18px; background:linear-gradient(180deg, #0d0d0d, #000);
+    display:grid; grid-template-columns:repeat(4, 1fr); gap:24px;
+    padding:24px; border-radius:18px; background:linear-gradient(180deg, #0d0d0d, #000);
     box-shadow: 0 20px 60px rgba(0,0,0,.55), inset 0 1px 0 rgba(255,255,255,.04);
   }
   .slot{
-    background:radial-gradient(240px 240px at 50% 30%, rgba(255,122,24,.08), transparent 60%), var(--card);
-    border:1px solid #1b1b1b; border-radius:16px; padding:14px;
-    display:flex; align-items:center; justify-content:center; gap:12px;
-    position:relative; min-height:280px;
+    background:radial-gradient(300px 300px at 50% 30%, rgba(255,122,24,.08), transparent 60%), var(--card);
+    border:1px solid #1b1b1b; border-radius:20px; padding:18px;
+    display:flex; align-items:center; justify-content:center; gap:14px;
+    position:relative; min-height:340px;
   }
   .symbol{
-    width:240px; height:240px; border-radius:14px;
+    width:300px; height:300px; border-radius:18px;
     background:#0d0d0d; display:flex; align-items:center; justify-content:center;
-    font-size:150px; font-weight:800; letter-spacing:.06em;
+    font-size:180px; font-weight:800; letter-spacing:.06em;
     border:1px solid #1f1f1f; box-shadow: inset 0 2px 0 rgba(255,255,255,.04);
   }
-  .arrow{ width:54px; height:54px; display:flex; align-items:center; justify-content:center; font-size:28px; }
+  .arrow{ width:60px; height:60px; display:flex; align-items:center; justify-content:center; font-size:32px; }
   button{
     appearance:none; border:0; cursor:pointer; border-radius:12px; padding:12px 16px; font-weight:700;
     background:#121212; color:var(--fg); border:1px solid #1f1f1f;
   }
   button:hover{ outline:1px solid #2a2a2a }
-  .action{ margin:22px 0 10px; display:flex; gap:12px; justify-content:center; }
-  .msg{ min-height:32px; color:var(--muted); font-size:1.2rem; }
+  .action{ margin:24px 0 10px; display:flex; gap:14px; justify-content:center; }
+  .msg{ min-height:32px; color:var(--muted); font-size:1.3rem; }
   .success{ color:var(--ok); font-weight:800; animation: pop .6s ease; }
   .fail{ color:var(--err); font-weight:700; }
   @keyframes pop { from{ transform:scale(.96); opacity:.4 } to{ transform:scale(1); opacity:1 } }
-  .footer{ margin-top:20px; color:#9aa0a6; font-size:1.1rem }
-  @media (max-width: 1000px){
+  .footer{ margin-top:24px; color:#9aa0a6; font-size:1.2rem }
+  @media (max-width: 1100px){
     .panel{ grid-template-columns:repeat(2, 1fr); }
   }
 </style>
@@ -164,14 +164,14 @@ function confetti(){
   const n = 60;
   for (let i=0;i<n;i++){
     const p = document.createElement('div');
-    const size = 6 + Math.random()*8;
+    const size = 8 + Math.random()*10;
     p.style.position='fixed'; p.style.left=(Math.random()*100)+'vw'; p.style.top='-10px';
     p.style.width=size+'px'; p.style.height=size+'px';
     p.style.background = Math.random()>.5 ? 'var(--accent)' : 'var(--accent2)';
     p.style.borderRadius='2px'; p.style.opacity=.9; p.style.zIndex=9999;
     document.body.appendChild(p);
-    const x = (Math.random()*2 -1) * 80;
-    const dur = 1500 + Math.random()*1500;
+    const x = (Math.random()*2 -1) * 100;
+    const dur = 1800 + Math.random()*1500;
     p.animate([{transform:`translate(${x}px, 0)`},{transform:`translate(${x*1.2}px, 95vh)`}],
               {duration:dur, easing:'cubic-bezier(.2,.7,.2,1)'}).onfinish = ()=> p.remove();
   }
@@ -181,6 +181,8 @@ function confetti(){
 document.getElementById('shuffle').addEventListener('click', shuffle);
 document.getElementById('check').addEventListener('click', check);
 build();
+
+// Suggerimento casuale
 hintBox.textContent = "Suggerimento: " + HINTS[Math.floor(Math.random()*HINTS.length)];
 </script>
 </body>
