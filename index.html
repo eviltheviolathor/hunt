@@ -123,11 +123,34 @@
     font-size:clamp(16px,2.2vw,22px); max-width:80%; text-align:center;
   }
 
+  /* Epilogo */
+  .lore{
+    max-width:min(900px,96vw);
+    margin:28px auto 0;
+    text-align:left;
+    background:rgba(0,0,0,.5);
+    border:1px solid rgba(43,255,136,.25);
+    border-radius:12px;
+    padding:14px 16px;
+    line-height:1.5;
+  }
+  .lore h3{
+    margin:0 0 8px; color:var(--accent);
+    font-size:clamp(18px,3vw,22px);
+    text-shadow:0 0 8px rgba(43,255,136,.25);
+  }
+  .lore p{ margin:8px 0; color:var(--fg); }
+  .lore .instr{
+    margin-top:10px; color:var(--accent2);
+    border-top:1px dashed rgba(43,255,136,.25);
+    padding-top:10px; font-weight:700;
+  }
+
   .blink{ animation: bl 0.12s linear infinite alternate; }
   @keyframes bl { from{opacity:1} to{opacity:.35} }
 </style>
 </head>
-<body><h1>diominchia09</h1>
+<body><h1>diominchia</h1>
   <main class="page">
     <!-- HERO -->
     <div class="hero" id="heroBox"></div>
@@ -182,6 +205,14 @@
       <div class="hud">Controlli: <strong>←</strong>/<strong>→</strong> muovi, <strong>SPAZIO</strong> o <strong>↑</strong> salta (tieni premuto <strong>↑</strong> per volo). Punteggio: <span class="score" id="score">0</span></div>
       <div class="loading" id="loadingMsg">Caricamento immagini…</div>
       <div class="cta" style="margin-top:10px"><button id="startGame">Avvia</button> <button id="restartGame" style="display:none">Riprova</button></div>
+    </section>
+
+    <!-- EPILOGO / TESTO RICHIESTO -->
+    <section class="lore" id="epilogue">
+      <h3>Il Sussurro del Pentacolo</h3>
+      <p>Hai composto i simboli proibiti, tracciato il rituale e posizionato il pugnale. La candela nera illumina il centro del pentacolo e dopo aver bruciato i peli pubici della zombie rossa sei sopravvissuto agli incubi di guardia: una voce, profonda e demoniaca ti rivela</p>
+      <p><em>"Ogni rituale demoniaco, per essere portato a compimento ha bisogno di un sacrificio, chi sarà la tua vittima sacrificale?"</em></p>
+      <p class="instr">"A mezzanotte (e solo a mezzanotte) nella Dark Room usa il comando <strong>/Sacrifica</strong> e nomina l'utente. Attenzione però, il malcapitato perderà la metà dei suoi punti esperienza!"</p>
     </section>
   </main>
 
@@ -365,10 +396,10 @@ document.addEventListener('DOMContentLoaded', () => {
   const MAX_FLIGHT_ENERGY = 0.5;   // metà carica massima
   let flightEnergy = MAX_FLIGHT_ENERGY;
   const FLIGHT_DRAIN = 0.6;        // /s mentre voli
-  const FLIGHT_RECHARGE = 0.18;    // /s ricarica lenta
+  const FLIGHT_RECHARGE = 0.06;    // /s ricarica LENTA (≈ 3x più lenta di prima)
   const FLIGHT_BOOST = 0.70;       // spinta per-frame (compensa gravità)
   const FLIGHT_CLIMB_CAP = -4.2;   // massimo rate di salita
-  const FLIGHT_MIN_Y = (airLaneY - 10) - 44; // top: poco sopra la corsia alta (10px di margine) considerando h≈44
+  const FLIGHT_MIN_Y = (airLaneY - 10) - 44; // top: poco sopra la corsia alta
   function updateChargeBar(){
     const pct = Math.round((flightEnergy / MAX_FLIGHT_ENERGY)*100);
     chargeFill.style.width = Math.max(0, Math.min(100, pct)) + '%';
