@@ -101,7 +101,7 @@
   @keyframes bl { from{opacity:1} to{opacity:.35} }
 </style>
 </head>
-<body><h1>diominchittttttttttttta</h1>
+<body><h1>diominchia</h1>
   <main class="page">
     <!-- HERO -->
     <div class="hero" id="heroBox"></div>
@@ -150,7 +150,7 @@
         <div id="livesHud" class="livesHud"></div>
         <canvas id="runner" width="900" height="300"></canvas>
       </div>
-      <div class="hud">Controlli: <strong>SPAZIO</strong> o <strong>↑</strong> (oppure tocca/tap). Punteggio: <span class="score" id="score">0</span></div>
+      <div class="hud">Controlli: <strong>←</strong>/<strong>→</strong> muovi, <strong>SPAZIO</strong> o <strong>↑</strong> salta. Punteggio: <span class="score" id="score">0</span></div>
       <div class="loading" id="loadingMsg">Caricamento immagini…</div>
       <div class="win" id="winMsg" style="display:none">✦ Hai domato la Zucca! Livello superato. ✦</div>
       <div class="cta" style="margin-top:10px"><button id="startGame">Avvia</button> <button id="restartGame" style="display:none">Riprova</button></div>
@@ -247,7 +247,7 @@ document.addEventListener('DOMContentLoaded', () => {
   ;[f1,f2,f3].forEach(el=>el.addEventListener('keydown',e=>{ if(e.key==='Enter') submitRitual(); e.stopPropagation(); }));
 
   /* =========================
-     MINIGIOCO — Pumpkin Runner (IMMAGINI, vite, corsia alta)
+     MINIGIOCO — Pumpkin Runner (vite, corsia alta, movimento, parallax)
      ========================= */
   const TARGET_SCORE = 666;
 
@@ -264,6 +264,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // Immagini
   const playerImg = new Image(); playerImg.src = 'media/zucca.png?v=1';
   const heartImgSrc = 'media/heart.png';
+  const bgImg = new Image(); bgImg.src = 'media/sfondo.png'; // sfondo infinito
   const monsterNames = ['mostro1.png','mostro2.png','mostro3.png','mostro4.png'];
   const monsterImgs = monsterNames.map(n => { const im=new Image(); im.src='media/'+n+'?v=1'; return im; });
 
@@ -278,13 +279,24 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Stato di gioco
   let running=false, gameOver=false, score=0, lastSpawn=0, lastTs=null;
-  let speed = 1.4;                // <<< molto lento all'inizio
-  const MAX_SPEED = 6.2;
-  const ACCEL_PER_SEC = 0.18;     // incremento molto graduale
+
+  // Velocità mondo MOLTO progressiva
+  let speed = 0.9;                 // lentissimo all'inizio
+  const MAX_SPEED = 5.0;           // tetto massimo più basso
+  const ACCEL_PER_SEC = 0.06;      // accelerazione morbida
+  const ACCEL_RAMP_TIME = 45;      // secondi per arrivare “su di giri”
+  // Applichiamo un easing dolce (cubic) sulla crescita nel tempo
+  let elapsedRunTime = 0;
+
+  // Sfondo parallax
+  let bgOffset = 0;
+  const BG_PARALLAX = 0.45;        // quanto lo sfondo “segue” la velocità
 
   const ground = cvs.height - 40;
-  const airLaneY = ground - 150;  // corsia alta (nemici “in aria”)
-  const player = { x:80, y:0, w:44, h:44, vy:0, onGround:true };
+  const airLaneY = ground - 150;   // corsia alta (nemici “in aria”)
+
+  // Player con movimento orizzontale
+  const player = { x:120, y:0, w:44, h:44, vx:0, vy:0, onGround:true };
   player.y = ground - player.h;
 
   const obstacles=[]; // {x,y,w,h,img,type:'ground'|'air'}
@@ -304,22 +316,55 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  // Fisica salto migliorata
-  const GRAVITY = 0.54;
-  const JUMP_VY = -11.2;
-  const COYOTE_TIME = 0.12;
-  const JUMP_BUFFER = 0.14;
+  // Fisica salto + movimento
+  const GRAVITY = 0.52;
+  const BASE_JUMP_VY = -11.0;      // salto verticale “normale”
+  const SHORT_CUT_VY = -3.0;       // taglio salita quando rilasci
+  const COYOTE_TIME = 0.14;
+  const JUMP_BUFFER = 0.16;
+
+  const MOVE_ACCEL = 0.20;         // accelerazione orizzontale a terra
+  const MOVE_ACCEL_AIR = 0.12;     // in aria controlli minori
+  const MAX_VX = 3.0;              // velocità orizzontale player massima
+  const FRICTION = 0.86;           // attrito quando non premi nulla
+
   let coyoteTimer = 0;
   let jumpBufferTimer = 0;
   let jumpHeld = false;
+  let leftHeld = false;
+  let rightHeld = false;
 
   function requestJump(){ jumpBufferTimer = JUMP_BUFFER; }
+
+  function doDirectionalJump(){
+    // Salto base
+    let vy = BASE_JUMP_VY;
+    let impulseX = 0;
+
+    // Modifiche richieste:
+    // → + salto: salto PIÙ BASSO e LUNGO IN AVANTI
+    if(rightHeld && !leftHeld){
+      vy = BASE_JUMP_VY * 0.78;     // più basso
+      impulseX = 2.6;               // spinta in avanti
+    }
+    // ← + salto: SALTELLO CORTO E BASSO ALL’INDIETRO
+    else if(leftHeld && !rightHeld){
+      vy = BASE_JUMP_VY * 0.62;     // ancora più basso
+      impulseX = -2.1;              // spinta indietro
+    }
+    // entrambi o nessuno => salto normale
+
+    player.vy = vy;
+    player.vx += impulseX;
+    player.vx = Math.max(-MAX_VX, Math.min(MAX_VX, player.vx));
+    player.onGround = false;
+    coyoteTimer = 0;
+    jumpBufferTimer = 0;
+  }
+
   function tryPerformJump(){
     if ((coyoteTimer > 0 || player.onGround) && jumpBufferTimer > 0){
-      player.vy = JUMP_VY;
-      player.onGround = false;
-      coyoteTimer = 0;
-      jumpBufferTimer = 0;
+      doDirectionalJump();
     }
   }
 
@@ -328,19 +373,46 @@ document.addEventListener('DOMContentLoaded', () => {
     const w = 46 + Math.random()*10;
     const ratio = (img && img.naturalWidth) ? (img.naturalHeight/img.naturalWidth) : 1.2;
     const h = w * ratio;
-    const type = Math.random() < 0.45 ? 'air' : 'ground'; // ~45% in alto, resto a terra
+    const type = Math.random() < 0.5 ? 'air' : 'ground'; // 50% in alto, 50% a terra
     const y = (type==='ground') ? (ground-h) : (airLaneY - h/2);
     obstacles.push({ x:cvs.width+10, y, w, h, img, type });
   }
 
   function drawImage(img, x,y,w,h){ if(img && img.complete && img.naturalWidth) ctx.drawImage(img,x,y,w,h); }
 
+  function drawBackground(delta){
+    if(bgImg && bgImg.complete && bgImg.naturalWidth){
+      const bw = bgImg.naturalWidth;
+      const bh = bgImg.naturalHeight;
+      const scale = cvs.height / bh; // scala per altezza canvas
+      const drawW = bw * scale;
+      bgOffset = (bgOffset - (speed * BG_PARALLAX)) % drawW;
+      if(bgOffset < -drawW) bgOffset += drawW;
+
+      // Disegna abbastanza tiles per coprire tutto
+      for(let x=bgOffset; x < cvs.width + drawW; x += drawW){
+        ctx.drawImage(bgImg, 0, 0, bw, bh, Math.floor(x), 0, Math.ceil(drawW), cvs.height);
+      }
+    } else {
+      // fallback: gradiente scuro
+      const g = ctx.createLinearGradient(0,0,0,cvs.height);
+      g.addColorStop(0,'#020202'); g.addColorStop(1,'#0a0a0a');
+      ctx.fillStyle=g; ctx.fillRect(0,0,cvs.width,cvs.height);
+    }
+  }
+
   function resetGame(){
-    running=false; gameOver=false; score=0; speed=1.4; lastTs=null; lastSpawn=0;
+    running=false; gameOver=false; score=0; lastTs=null; lastSpawn=0;
     winMsg.style.display='none';
-    obstacles.length=0; player.y=ground-player.h; player.vy=0; player.onGround=true;
+    obstacles.length=0;
+
+    // reset velocità mondo e easing
+    speed=0.9; elapsedRunTime=0;
+
+    // reset player
+    player.x=120; player.y=ground-player.h; player.vx=0; player.vy=0; player.onGround=true;
     scoreHudEl.textContent='0'; scoreEl.textContent='0';
-    coyoteTimer = 0; jumpBufferTimer = 0; jumpHeld = false;
+    coyoteTimer = 0; jumpBufferTimer = 0; jumpHeld = false; leftHeld=false; rightHeld=false;
     invuln = 0; lives = MAX_LIVES; renderLives();
     cvs.classList.remove('blink');
   }
@@ -352,45 +424,51 @@ document.addEventListener('DOMContentLoaded', () => {
     cvs.classList.add('blink');
     if(lives <= 0){
       gameOver = true; running = false; cvs.classList.remove('blink');
-      document.getElementById('restartGame').style.display='inline-block';
+      restartBtn.style.display='inline-block';
     }
   }
 
   function loop(ts){
     if(!running) return;
     const delta = lastTs ? (ts-lastTs)/1000 : 0; lastTs = ts;
+    elapsedRunTime += delta;
 
-    // Accelerazione dolce
-    speed = Math.min(MAX_SPEED, speed + ACCEL_PER_SEC * delta);
+    // Easing sulla velocità: parte piano e cresce lentamente lungo ACCEL_RAMP_TIME
+    const t = Math.min(1, elapsedRunTime / ACCEL_RAMP_TIME);
+    const eased = t*t*(3 - 2*t); // smoothstep
+    const targetSpeed = 0.9 + (MAX_SPEED - 0.9) * eased;
+    // avvicinati lentamente al target (filtraggio a bassa frequenza)
+    speed += (targetSpeed - speed) * ACCEL_PER_SEC;
 
-    // punteggio: cresce lentamente, un filo colla velocità
-    score += (1.8 + (speed-1.4)*0.25) * delta;
+    // punteggio: cresce piano, leggermente influenzato dalla velocità
+    score += (1.2 + (speed-0.9)*0.25) * delta;
     const shown = Math.floor(score);
     scoreHudEl.textContent = shown;
     scoreEl.textContent = shown;
 
     if(score >= TARGET_SCORE && !gameOver){
-      running=false; gameOver=true; winMsg.style.display='block'; document.getElementById('restartGame').style.display='inline-block';
+      running=false; gameOver=true; winMsg.style.display='block'; restartBtn.style.display='inline-block';
       cvs.classList.remove('blink');
     }
 
-    ctx.clearRect(0,0,cvs.width,cvs.height);
+    // Sfondo parallax prima di tutto
+    drawBackground(delta);
 
-    // linee “pista” (terra & corsia alta)
+    // linee pista (terra & corsia alta)
     ctx.strokeStyle='rgba(43,255,136,.3)';
     ctx.beginPath(); ctx.moveTo(0,ground+0.5); ctx.lineTo(cvs.width,ground+0.5); ctx.stroke();
     ctx.setLineDash([6,6]); ctx.beginPath(); ctx.moveTo(0,airLaneY+0.5); ctx.lineTo(cvs.width,airLaneY+0.5); ctx.stroke(); ctx.setLineDash([]);
 
-    // spawn ostacoli: adattivo, più rado e con jitter
-    const baseInterval = 2000 - speed*120;     // parte alto, scende piano
-    const jitter = 700 * Math.random();
-    const interval = Math.max(1100, baseInterval + jitter);
+    // spawn ostacoli: adattivo, molto rado all'inizio
+    const baseInterval = 2300 - speed*100;     // scende lentamente con speed
+    const jitter = 900 * Math.random();
+    const interval = Math.max(1300, baseInterval + jitter);
     if(ts - lastSpawn > interval){ spawnObstacle(); lastSpawn = ts; }
 
     // ostacoli
     for(let i=obstacles.length-1;i>=0;i--){
       const o=obstacles[i];
-      o.x -= speed;
+      o.x -= speed; // mondo scorre a sinistra
       drawImage(o.img, o.x, o.y, o.w, o.h);
       if(o.x + o.w < 0) obstacles.splice(i,1);
 
@@ -402,7 +480,24 @@ document.addEventListener('DOMContentLoaded', () => {
       if(overlap){ hitPlayer(); }
     }
 
-    // fisica player (coyote + buffer + salto variabile)
+    /* --- Fisica player --- */
+
+    // Input orizzontale
+    const accel = player.onGround ? MOVE_ACCEL : MOVE_ACCEL_AIR;
+    if(leftHeld && !rightHeld)  player.vx -= accel;
+    else if(rightHeld && !leftHeld) player.vx += accel;
+    else player.vx *= FRICTION; // nessun input => attrito
+
+    // clamp velocità orizzontale
+    player.vx = Math.max(-MAX_VX, Math.min(MAX_VX, player.vx));
+
+    // aggiorna posizione X, restando dentro i limiti visuali
+    player.x += player.vx;
+    const minX = 20, maxX = cvs.width * 0.7; // non oltre il 70% a destra
+    if(player.x < minX){ player.x = minX; player.vx = Math.max(0, player.vx); }
+    if(player.x > maxX){ player.x = maxX; player.vx = Math.min(0, player.vx); }
+
+    // gravità e Y
     player.vy += GRAVITY;
     player.y += player.vy;
 
@@ -426,26 +521,31 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     }
 
-    // salto variabile
-    if(!jumpHeld && player.vy < -3){ player.vy = -3; }
+    // salto variabile (taglia la salita se rilasci)
+    if(!jumpHeld && player.vy < SHORT_CUT_VY){
+      player.vy = SHORT_CUT_VY;
+    }
 
     // timers
     jumpBufferTimer -= delta;
     invuln -= delta;
     if(invuln <= 0){ invuln = 0; cvs.classList.remove('blink'); }
 
-    // draw player
-    if(!(invuln>0 && Math.floor(ts/60)%2===0)){ // piccolo lampeggio
+    // draw player (lampeggio in invulnerabilità)
+    if(!(invuln>0 && Math.floor(ts/60)%2===0)){
       drawImage(playerImg, player.x, player.y, player.w, player.h);
     }
 
     requestAnimationFrame(loop);
   }
 
-  // Input: SPACE/UP o tap
+  // Input tastiera
   window.addEventListener('keydown', async (e)=>{
     const tag=document.activeElement && document.activeElement.tagName;
     if(tag==='INPUT' || tag==='TEXTAREA') return;
+
+    if(e.code==='ArrowLeft'){ leftHeld = true; }
+    if(e.code==='ArrowRight'){ rightHeld = true; }
 
     if(e.code==='Space' || e.code==='ArrowUp'){
       e.preventDefault();
@@ -464,30 +564,26 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
   window.addEventListener('keyup', (e)=>{
-    if(e.code==='Space' || e.code==='ArrowUp'){
-      jumpHeld = false;
-    }
+    if(e.code==='ArrowLeft'){ leftHeld = false; }
+    if(e.code==='ArrowRight'){ rightHeld = false; }
+    if(e.code==='Space' || e.code==='ArrowUp'){ jumpHeld = false; }
   });
 
+  // Touch/click sul canvas: tap per saltare, tap prolungato = salto più lungo
   document.getElementById('runner').addEventListener('pointerdown', ()=>{
-    if(gameOver){
-      resetGame(); startGame(); return;
-    }
-    if(!running){
-      startGame(); requestJump();
-    } else {
-      jumpHeld = true; requestJump(); tryPerformJump();
-    }
+    if(gameOver){ resetGame(); startGame(); return; }
+    if(!running){ startGame(); requestJump(); }
+    else { jumpHeld = true; requestJump(); tryPerformJump(); }
   });
   document.getElementById('runner').addEventListener('pointerup', ()=>{ jumpHeld=false; });
 
   async function startGame(){
     loadingMsg.style.display='block';
-    await preload([playerImg, ...monsterImgs]);
+    await preload([playerImg, bgImg, ...monsterImgs]);
     loadingMsg.style.display='none';
 
     if(!running){
-      running = true; document.getElementById('restartGame').style.display='none'; requestAnimationFrame(loop);
+      running = true; restartBtn.style.display='none'; requestAnimationFrame(loop);
     }
   }
 
