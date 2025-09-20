@@ -18,32 +18,46 @@
     --err:#ff4444;
   }
 
-  *{box-sizing:border-box}
-  html,body{height:100%}
-  body{
-    margin:0; background:radial-gradient(circle at 50% 20%, #111 0%, #000 80%);
+  *{box-sizing:border-box;margin:0;padding:0}
+
+  html,body{
+    height:100%;
+    width:100%;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    background:radial-gradient(circle at 50% 20%, #111 0%, #000 80%);
     color:var(--fg);
     font-family: 'Cinzel Decorative', serif;
-    display:flex; align-items:center; justify-content:center;
     overflow:hidden;
   }
 
-  .wrap{ width:min(1600px, 96vw); text-align:center; position:relative; }
+  .wrap{
+    width:100%;
+    max-width:1600px;
+    text-align:center;
+  }
 
   h1{
     font-size:clamp(28px,4vw,48px);
-    margin:0 0 10px;
+    margin-bottom:12px;
     letter-spacing:.08em;
     color:var(--accent);
     text-shadow:0 0 12px var(--accent), 0 0 28px var(--accent2);
   }
-  .sub{ color:var(--muted); margin:0 0 24px; font-size:1.2rem; }
+
+  .sub{ color:var(--muted); margin-bottom:28px; font-size:1.2rem; }
 
   .panel{
-    display:grid; grid-template-columns:repeat(4, 1fr); gap:28px;
-    padding:24px; border-radius:20px;
+    display:grid;
+    grid-template-columns:repeat(4, 1fr);
+    gap:28px;
+    justify-items:center;
+    padding:24px;
+    border-radius:20px;
     background:rgba(20,20,20,0.85);
     box-shadow: 0 0 40px rgba(43,255,136,.25), inset 0 0 20px rgba(43,255,136,.15);
+    margin:0 auto;
   }
 
   .slot{
@@ -51,8 +65,13 @@
     border:2px solid rgba(43,255,136,.3);
     border-radius:22px;
     padding:18px;
-    display:flex; align-items:center; justify-content:center; gap:14px;
-    position:relative; min-height:340px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:14px;
+    min-height:340px;
+    width:100%;
+    max-width:360px;
     box-shadow:inset 0 0 20px rgba(43,255,136,.15);
   }
 
@@ -60,9 +79,12 @@
     width:300px; height:300px; border-radius:18px;
     background:rgba(0,0,0,.6);
     display:flex; align-items:center; justify-content:center;
-    font-size:180px; font-weight:800; letter-spacing:.06em;
     border:1px solid rgba(43,255,136,.4);
     box-shadow: 0 0 20px rgba(43,255,136,.15), inset 0 0 15px rgba(43,255,136,.1);
+  }
+
+  .symbol img{
+    width:280px; height:280px; object-fit:contain;
   }
 
   .arrow{
@@ -127,20 +149,14 @@
 // =====================
 // CONFIGURAZIONE
 // =====================
-// Sostituisci le immagini con i tuoi file (in /media della repo)
-const SYMBOLS = [
-  { id: 'candela', view: '<img src="media/candela.png" alt="candela" style="width:280px;height:280px">' },
-  { id: 'teschio', view: '<img src="media/teschio.png" alt="teschio" style="width:280px;height:280px">' },
-  { id: 'osso',    view: '<img src="media/osso.png"    alt="osso"    style="width:280px;height:280px">' },
-  { id: 'runa',    view: '<img src="media/runa.png"    alt="runa"    style="width:280px;height:280px">' },
-  { id: 'pugnale', view: '<img src="media/pugnale.png" alt="pugnale" style="width:280px;height:280px">' }
-];
+// 12 immagini numerate 1.png ... 12.png dentro /media
+const SYMBOLS = Array.from({length:12}, (_,i) => {
+  const num = i+1;
+  return { id: String(num), view: `<img src="media/${num}.png" alt="simbolo ${num}">` };
+});
 
-// Sequenza corretta (modifica con gli id sopra)
-const TARGET = ['candela','teschio','runa','osso'];
-
-// Numero di slot
-const SLOTS = 4;
+// Sequenza corretta
+const TARGET = ['1','2','3','4'];
 
 // Suggerimenti random
 const HINTS = [
@@ -191,11 +207,11 @@ function renderSymbol(el, idx){ el.innerHTML = SYMBOLS[idx].view; }
 
 function build(){
   panel.innerHTML=''; state = [];
-  for(let i=0;i<SLOTS;i++) panel.appendChild(createSlot(i));
+  for(let i=0;i<4;i++) panel.appendChild(createSlot(i));
 }
 
 function shuffle(){
-  for (let i=0;i<SLOTS;i++) state[i] = Math.floor(Math.random()*SYMBOLS.length);
+  for (let i=0;i<4;i++) state[i] = Math.floor(Math.random()*SYMBOLS.length);
   [...panel.children].forEach((slotEl, i)=> renderSymbol(slotEl.querySelector('.symbol'), state[i]));
   message.textContent = '';
 }
@@ -206,28 +222,9 @@ function check(){
   if(ok){
     message.className = 'msg success';
     message.textContent = 'bravo';
-    confetti();
   } else {
     message.className = 'msg fail';
     message.textContent = 'sbagliato';
-  }
-}
-
-// mini-confetti spettrali
-function confetti(){
-  const n = 60;
-  for (let i=0;i<n;i++){
-    const p = document.createElement('div');
-    const size = 8 + Math.random()*10;
-    p.style.position='fixed'; p.style.left=(Math.random()*100)+'vw'; p.style.top='-10px';
-    p.style.width=size+'px'; p.style.height=size+'px';
-    p.style.background = Math.random()>.5 ? 'var(--accent)' : 'var(--accent2)';
-    p.style.borderRadius='50%'; p.style.opacity=.9; p.style.zIndex=9999;
-    document.body.appendChild(p);
-    const x = (Math.random()*2 -1) * 100;
-    const dur = 2000 + Math.random()*1500;
-    p.animate([{transform:`translate(${x}px, 0)`},{transform:`translate(${x*1.2}px, 95vh)`}],
-              {duration:dur, easing:'cubic-bezier(.2,.7,.2,1)'}).onfinish = ()=> p.remove();
   }
 }
 
