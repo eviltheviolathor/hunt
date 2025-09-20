@@ -5,51 +5,104 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Rituale — Combinazione di Simboli</title>
 <style>
+  @import url('https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700&display=swap');
+
   :root{
-    --bg:#000; --fg:#eaeaea; --muted:#8b8b8b;
-    --accent:#ff7a18; --accent2:#c679ff;
-    --card:#0a0a0a; --ok:#22c55e; --err:#ef4444;
+    --bg:#050505;
+    --fg:#e6e6e6;
+    --muted:#7a7a7a;
+    --accent:#2bff88;
+    --accent2:#6bffda;
+    --card:#0d0d0d;
+    --ok:#22c55e;
+    --err:#ff4444;
   }
+
   *{box-sizing:border-box}
   html,body{height:100%}
   body{
-    margin:0; background:var(--bg); color:var(--fg);
-    font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial;
+    margin:0; background:radial-gradient(circle at 50% 20%, #111 0%, #000 80%);
+    color:var(--fg);
+    font-family: 'Cinzel Decorative', serif;
     display:flex; align-items:center; justify-content:center;
+    overflow:hidden;
   }
-  .wrap{ width:min(1600px, 96vw); text-align:center; }
-  h1{ font-size:clamp(24px,3vw,38px); margin:0 0 6px; letter-spacing:.04em; }
-  .sub{ color:var(--muted); margin:0 0 20px; }
+
+  .wrap{ width:min(1600px, 96vw); text-align:center; position:relative; }
+
+  h1{
+    font-size:clamp(28px,4vw,48px);
+    margin:0 0 10px;
+    letter-spacing:.08em;
+    color:var(--accent);
+    text-shadow:0 0 12px var(--accent), 0 0 28px var(--accent2);
+  }
+  .sub{ color:var(--muted); margin:0 0 24px; font-size:1.2rem; }
+
   .panel{
-    display:grid; grid-template-columns:repeat(4, 1fr); gap:24px;
-    padding:24px; border-radius:18px; background:linear-gradient(180deg, #0d0d0d, #000);
-    box-shadow: 0 20px 60px rgba(0,0,0,.55), inset 0 1px 0 rgba(255,255,255,.04);
+    display:grid; grid-template-columns:repeat(4, 1fr); gap:28px;
+    padding:24px; border-radius:20px;
+    background:rgba(20,20,20,0.85);
+    box-shadow: 0 0 40px rgba(43,255,136,.25), inset 0 0 20px rgba(43,255,136,.15);
   }
+
   .slot{
-    background:radial-gradient(300px 300px at 50% 30%, rgba(255,122,24,.08), transparent 60%), var(--card);
-    border:1px solid #1b1b1b; border-radius:20px; padding:18px;
+    background:radial-gradient(300px 300px at 50% 30%, rgba(43,255,136,.08), transparent 70%), var(--card);
+    border:2px solid rgba(43,255,136,.3);
+    border-radius:22px;
+    padding:18px;
     display:flex; align-items:center; justify-content:center; gap:14px;
     position:relative; min-height:340px;
+    box-shadow:inset 0 0 20px rgba(43,255,136,.15);
   }
+
   .symbol{
     width:300px; height:300px; border-radius:18px;
-    background:#0d0d0d; display:flex; align-items:center; justify-content:center;
+    background:rgba(0,0,0,.6);
+    display:flex; align-items:center; justify-content:center;
     font-size:180px; font-weight:800; letter-spacing:.06em;
-    border:1px solid #1f1f1f; box-shadow: inset 0 2px 0 rgba(255,255,255,.04);
+    border:1px solid rgba(43,255,136,.4);
+    box-shadow: 0 0 20px rgba(43,255,136,.15), inset 0 0 15px rgba(43,255,136,.1);
   }
-  .arrow{ width:60px; height:60px; display:flex; align-items:center; justify-content:center; font-size:32px; }
+
+  .arrow{
+    width:60px; height:60px;
+    display:flex; align-items:center; justify-content:center;
+    font-size:32px;
+    background:rgba(30,30,30,.8);
+    border:1px solid rgba(43,255,136,.3);
+    border-radius:12px;
+    cursor:pointer;
+    color:var(--fg);
+    transition: all .2s ease;
+  }
+  .arrow:hover{ background:rgba(43,255,136,.15); }
+
+  .action{ margin:28px 0 10px; display:flex; gap:16px; justify-content:center; }
+
   button{
-    appearance:none; border:0; cursor:pointer; border-radius:12px; padding:12px 16px; font-weight:700;
-    background:#121212; color:var(--fg); border:1px solid #1f1f1f;
+    appearance:none; border:0; cursor:pointer;
+    border-radius:12px; padding:14px 20px; font-weight:700;
+    background:rgba(30,30,30,.9);
+    color:var(--fg); border:2px solid rgba(43,255,136,.3);
+    font-family:'Cinzel Decorative', serif;
+    font-size:1.1rem;
+    transition:all .2s ease;
   }
-  button:hover{ outline:1px solid #2a2a2a }
-  .action{ margin:24px 0 10px; display:flex; gap:14px; justify-content:center; }
-  .msg{ min-height:32px; color:var(--muted); font-size:1.3rem; }
-  .success{ color:var(--ok); font-weight:800; animation: pop .6s ease; }
-  .fail{ color:var(--err); font-weight:700; }
+  button:hover{ background:rgba(43,255,136,.15); }
+
+  .msg{ min-height:36px; font-size:1.4rem; margin-top:10px; }
+  .success{ color:var(--ok); text-shadow:0 0 10px var(--ok); animation: pop .6s ease; }
+  .fail{ color:var(--err); text-shadow:0 0 8px var(--err); }
+
   @keyframes pop { from{ transform:scale(.96); opacity:.4 } to{ transform:scale(1); opacity:1 } }
-  .footer{ margin-top:24px; color:#9aa0a6; font-size:1.2rem }
-  @media (max-width: 1100px){
+
+  .footer{
+    margin-top:26px; color:var(--accent2); font-size:1.2rem;
+    text-shadow:0 0 6px rgba(43,255,136,.4);
+  }
+
+  @media (max-width: 1200px){
     .panel{ grid-template-columns:repeat(2, 1fr); }
   }
 </style>
@@ -57,9 +110,9 @@
 <body>
   <div class="wrap">
     <h1>Combinazione di Simboli</h1>
-    <p class="sub">Scegli i 4 simboli nell'ordine corretto per aprire il portale.</p>
+    <p class="sub">Allinea i quattro simboli corretti per risvegliare l'oscuro portale.</p>
 
-    <div class="panel" id="panel"><!-- slot creati via JS --></div>
+    <div class="panel" id="panel"></div>
 
     <div class="action">
       <button id="shuffle">Mescola</button>
@@ -74,16 +127,17 @@
 // =====================
 // CONFIGURAZIONE
 // =====================
+// Sostituisci le immagini con i tuoi file (in /media della repo)
 const SYMBOLS = [
-  { id: '1', view: '1' },
-  { id: '2', view: '2' },
-  { id: '3', view: '3' },
-  { id: '4', view: '4' },
-  { id: '5', view: '5' }
+  { id: 'candela', view: '<img src="media/candela.png" alt="candela" style="width:280px;height:280px">' },
+  { id: 'teschio', view: '<img src="media/teschio.png" alt="teschio" style="width:280px;height:280px">' },
+  { id: 'osso',    view: '<img src="media/osso.png"    alt="osso"    style="width:280px;height:280px">' },
+  { id: 'runa',    view: '<img src="media/runa.png"    alt="runa"    style="width:280px;height:280px">' },
+  { id: 'pugnale', view: '<img src="media/pugnale.png" alt="pugnale" style="width:280px;height:280px">' }
 ];
 
-// Sequenza corretta
-const TARGET = ['1','2','3','4'];
+// Sequenza corretta (modifica con gli id sopra)
+const TARGET = ['candela','teschio','runa','osso'];
 
 // Numero di slot
 const SLOTS = 4;
@@ -107,13 +161,13 @@ function createSlot(i){
   const wrap = document.createElement('div');
   wrap.className = 'slot';
 
-  const left = document.createElement('button');
+  const left = document.createElement('div');
   left.className = 'arrow'; left.textContent = '◀';
 
   const sym = document.createElement('div');
   sym.className = 'symbol';
 
-  const right = document.createElement('button');
+  const right = document.createElement('div');
   right.className = 'arrow'; right.textContent = '▶';
 
   wrap.appendChild(left); wrap.appendChild(sym); wrap.appendChild(right);
@@ -159,7 +213,7 @@ function check(){
   }
 }
 
-// mini-confetti
+// mini-confetti spettrali
 function confetti(){
   const n = 60;
   for (let i=0;i<n;i++){
@@ -168,10 +222,10 @@ function confetti(){
     p.style.position='fixed'; p.style.left=(Math.random()*100)+'vw'; p.style.top='-10px';
     p.style.width=size+'px'; p.style.height=size+'px';
     p.style.background = Math.random()>.5 ? 'var(--accent)' : 'var(--accent2)';
-    p.style.borderRadius='2px'; p.style.opacity=.9; p.style.zIndex=9999;
+    p.style.borderRadius='50%'; p.style.opacity=.9; p.style.zIndex=9999;
     document.body.appendChild(p);
     const x = (Math.random()*2 -1) * 100;
-    const dur = 1800 + Math.random()*1500;
+    const dur = 2000 + Math.random()*1500;
     p.animate([{transform:`translate(${x}px, 0)`},{transform:`translate(${x*1.2}px, 95vh)`}],
               {duration:dur, easing:'cubic-bezier(.2,.7,.2,1)'}).onfinish = ()=> p.remove();
   }
