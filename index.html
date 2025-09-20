@@ -21,7 +21,6 @@
     color:var(--fg); font-family:'Cinzel Decorative', serif;
   }
 
-  /* CONTENITORE */
   .page{
     min-height:100vh; max-width:1600px; margin:0 auto;
     padding:28px 24px 56px;
@@ -29,7 +28,6 @@
     justify-content:flex-start; text-align:center;
   }
 
-  /* BANNER */
   .hero{
     width:100%; max-width:1400px; margin:0 auto 18px;
     display:flex; justify-content:center;
@@ -43,7 +41,6 @@
   }
   .sub{ color:var(--muted); margin:0 0 26px; font-size:1.05rem; }
 
-  /* PANNELLO COMBINAZIONE */
   .panel{
     display:grid; grid-template-columns:repeat(4, minmax(320px, 1fr));
     gap:28px; width:100%; max-width:1400px; padding:24px;
@@ -99,7 +96,6 @@
   .footer{ margin-top:24px; color:var(--accent2); font-size:1.1rem;
     text-shadow:0 0 6px rgba(43,255,136,.35); }
 
-  /* BLOCCO RITUALE */
   #rituale{ display:none; width:100%; max-width:1100px; margin:28px auto 0; }
   .rituale-text{
     margin:18px auto 22px; line-height:1.5; color:var(--fg); max-width:1000px;
@@ -109,7 +105,6 @@
     position:relative; width:min(90vw, 800px); height:min(90vw, 800px);
     margin:0 auto 16px;
   }
-  /* posizioniamo i 3 input su 3 punte */
   .rit-field{
     position:absolute; transform:translate(-50%, -50%);
     width:min(60vw, 360px);
@@ -126,14 +121,12 @@
   }
   .rit-msg{ min-height:28px; margin-top:8px; }
 
-  /* Responsivo */
   @media (max-width:1200px){ .panel{ grid-template-columns:repeat(2, minmax(320px, 1fr)); } }
   @media (max-width:680px){ .panel{ grid-template-columns:1fr; } }
 </style>
 </head>
 <body>
   <main class="page">
-    <!-- BANNER IN ALTO -->
     <div class="hero">
       <img src="media/home.png" alt="Il Rituale">
     </div>
@@ -141,7 +134,6 @@
     <h1>Combinazione di Simboli</h1>
     <p class="sub">Allinea i quattro simboli corretti per risvegliare l'oscuro portale.</p>
 
-    <!-- PANNELLO COMBINAZIONE -->
     <section class="panel" id="panel"></section>
 
     <div class="action">
@@ -152,7 +144,6 @@
 
     <div class="footer" id="hintBox"></div>
 
-    <!-- BLOCCO DEL RITUALE (nascosto finché non risolvono la combinazione) -->
     <section id="rituale">
       <p class="rituale-text">
         <strong>Bene, molto bene.</strong> Quindi Herr Knock ti ha insegnato molto.
@@ -161,16 +152,14 @@
         ma non sarà facile.
       </p>
 
-      <!-- Pentacolo SVG + input -->
       <div class="pentacolo">
-        <!-- pentacolo -->
-        <svg viewBox="0 0 100 100" width="100%" height="100%" aria-hidden="true" style="position:absolute;left:0;top:0;filter:drop-shadow(0 0 10px rgba(43,255,136,.35));">
+        <svg viewBox="0 0 100 100" width="100%" height="100%" aria-hidden="true"
+             style="position:absolute;left:0;top:0;filter:drop-shadow(0 0 10px rgba(43,255,136,.35));">
           <circle cx="50" cy="50" r="45" fill="none" stroke="rgba(43,255,136,.35)" stroke-width="2"/>
           <polygon points="50,6 61,40 96,40 67,60 78,94 50,73 22,94 33,60 4,40 39,40"
                    fill="none" stroke="rgba(43,255,136,.55)" stroke-width="2"/>
         </svg>
 
-        <!-- Input su 3 punte (top, bottom-left, bottom-right) -->
         <div class="rit-field" style="left:50%; top:10%;">
           <input id="f1" type="text" placeholder="Ingrediente I">
         </div>
@@ -181,53 +170,35 @@
           <input id="f3" type="text" placeholder="Ingrediente III">
         </div>
 
-        <!-- Bottone al centro -->
         <button class="rit-btn" id="completeBtn">Completa</button>
       </div>
 
       <div id="ritMsg" class="rit-msg"></div>
     </section>
 
-    <!-- Sezione prossima fase (la riempiremo dopo) -->
-    <section id="nextStep" style="display:none; margin-top:22px;">
-      <!-- TODO: contenuto step successivo -->
-    </section>
+    <section id="nextStep" style="display:none; margin-top:22px;"></section>
   </main>
 
 <script>
-/* =======================
-   IMMAGINI SIMBOLI (1..12)
-   ======================= */
 const SYMBOLS = Array.from({length:12}, (_,i) => {
   const num = i+1;
-  const src = `./media/${num}.png`; // path relativo
+  const src = `./media/${num}.png`;
   return { id: String(num), src };
 });
 
-/* ==========================================
-   COMBINAZIONE "OFFUSCATA" (non in chiaro)
-   ==========================================
-   "1,2,3,4" -> Base64 -> MSwyLDMsNA==
-*/
 const TARGET = atob("MSwyLDMsNA==").split(",");
 
-/* =======================
-   SUGGERIMENTO CASUALE
-   ======================= */
 const HINTS = [
   "Spesso gli oggetti dei rituali si nascondono nelle stanze più buie.",
   "Le scope delle streghe nascondono sempre qualcosa.",
   "Una volta ho sentito la storia di una \"casa del dolore\", forse si parlava di qualcosa di interessante?"
 ];
 
-/* =======================
-   LOGICA INTERFACCIA (puzzle)
-   ======================= */
 const panel   = document.getElementById('panel');
 const message = document.getElementById('message');
 const hintBox = document.getElementById('hintBox');
 const rituale = document.getElementById('rituale');
-let state = []; // indici selezionati nei 4 slot
+let state = [];
 
 function createSlot(i){
   const wrap = document.createElement('div');
@@ -244,7 +215,6 @@ function createSlot(i){
 
   wrap.appendChild(left); wrap.appendChild(sym); wrap.appendChild(right);
 
-  // stato iniziale random
   state[i] = Math.floor(Math.random() * SYMBOLS.length);
   renderSymbol(sym, state[i]);
 
@@ -290,9 +260,9 @@ function check(){
   const ok = pickedIds.length === TARGET.length && pickedIds.every((id, i)=> id === TARGET[i]);
   if(ok){
     message.className = 'msg success';
-    message.textContent = 'Bene, molto bene. Quindi Herr Knock ti ha insegnato molto. Per procedere con il rituale è fondamentale trovare i tre ingredienti per Evocare il Principe delle Tenebre. Credo che tu possa trovarli all'interno del server, ma non sarà facile.';
-    rituale.style.display = 'block'; // sblocca la sezione del rituale
-    // scrolla al rituale
+    message.textContent =
+      "Bene, molto bene. Quindi Herr Knock ti ha insegnato molto. Per procedere con il rituale è fondamentale trovare i tre ingredienti per Evocare il Principe delle Tenebre. Credo che tu possa trovarli all'interno del server, ma non sarà facile.";
+    rituale.style.display = 'block';
     rituale.scrollIntoView({behavior:'smooth', block:'start'});
   } else {
     message.className = 'msg fail';
@@ -300,9 +270,6 @@ function check(){
   }
 }
 
-/* =======================
-   LOGICA RITUALE (3 CAMPI)
-   ======================= */
 const answers = [
   "Candela Nera",
   "Coltello Arrugginito con il Simbolo della Bestia",
@@ -327,21 +294,19 @@ document.getElementById('completeBtn').addEventListener('click', ()=>{
   if(ok){
     box.className = 'rit-msg success';
     box.textContent = 'Il cerchio si illumina... (la prossima parte si sbloccherà qui)';
-    // mostra placeholder prossima sezione (vuota per ora)
     document.getElementById('nextStep').style.display = 'block';
-    document.getElementById('nextStep').innerHTML = '<p style="color:var(--accent);text-shadow:0 0 10px var(--accent)">[Prossima fase del rituale — da aggiungere]</p>';
+    document.getElementById('nextStep').innerHTML =
+      '<p style="color:var(--accent);text-shadow:0 0 10px var(--accent)">[Prossima fase del rituale — da aggiungere]</p>';
   }else{
     box.className = 'rit-msg fail';
     box.textContent = 'La formula non risponde. Forse hai sbagliato gli ingredienti...';
   }
 });
 
-/* AVVIO */
 document.getElementById('shuffle').addEventListener('click', shuffle);
 document.getElementById('check').addEventListener('click', check);
 build();
 
-// Suggerimento random a ogni refresh
 hintBox.textContent = "Suggerimento: " + HINTS[Math.floor(Math.random()*HINTS.length)];
 </script>
 </body>
