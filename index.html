@@ -51,7 +51,6 @@
   .pentacolo{position:relative;width:min(90vw,600px);height:min(90vw,600px);margin:0 auto 24px}
   .pentacolo svg{transform:rotate(180deg)}
 
-  /* campi SUL pentacolo: sopra / centro / sotto */
   .rit-field{position:absolute;transform:translate(-50%,-50%)}
   .rf-top    {left:50%; top:22%;  width:66%;}
   .rf-mid    {left:50%; top:50%;  width:60%;}
@@ -71,13 +70,13 @@
   #game{display:none;width:100%;max-width:min(960px,96vw);margin:28px auto 0;text-align:center}
   #game h2{margin:8px 0 6px;font-size:clamp(20px,4vw,28px);color:var(--accent);text-shadow:0 0 10px var(--accent)}
   #goal{color:var(--muted); margin-bottom:8px}
-  #canvasWrap{background:#000;border:2px solid rgba(43,255,136,.3);border-radius:10px;padding:8px; position:relative;}
+  #canvasWrap{background:#000;border:2px solid rgba(43,255,136,.3);border-radius:10px;padding:8px; position:relative; transition:filter .2s ease;}
+  #canvasWrap.invert{ filter: invert(1) hue-rotate(180deg); }
   canvas{display:block;width:100%;height:auto;background:#000}
   .hud{color:var(--muted);margin-top:8px;font-size:clamp(14px,2vw,16px)}
   .score{color:var(--accent2);margin-left:6px}
   .loading{color:var(--accent2); margin:8px 0}
 
-  /* HUD punteggio + cuori + carica volo */
   .scoreHud{
     position:absolute; left:8px; top:8px;
     padding:6px 10px; font-weight:700;
@@ -95,7 +94,7 @@
     border-radius:8px; padding:4px 6px;
     user-select:none; pointer-events:none;
   }
-  .livesHud img{ width:18px; height:18px; image-rendering:auto; }
+  .livesHud img{ width:18px; height:18px; }
 
   .chargeLabel{
     position:absolute; left:50%; transform:translateX(-50%);
@@ -109,7 +108,6 @@
   }
   .chargeFill{height:100%; width:0%; background:linear-gradient(90deg, #2bff88, #6bffda)}
 
-  /* Overlay fine partita */
   .overlayMsg{
     position:absolute; inset:0;
     display:none; align-items:center; justify-content:center;
@@ -123,35 +121,41 @@
     font-size:clamp(16px,2.2vw,22px); max-width:80%; text-align:center;
   }
 
-  /* Epilogo (nascosto di default) */
+  /* Epilogo (nascosto finché non si sblocca) */
   .lore{
     max-width:min(900px,96vw);
     margin:28px auto 0;
-    text-align:left;
+    text-align:center; /* centrato come richiesto */
     background:rgba(0,0,0,.5);
     border:1px solid rgba(43,255,136,.25);
     border-radius:12px;
     padding:14px 16px;
-    line-height:1.5;
-    display:none; /* nascosto finché non sblocchi 666 */
+    line-height:1.6;
+    display:none;
   }
   .lore h3{
     margin:0 0 8px; color:var(--accent);
     font-size:clamp(18px,3vw,22px);
     text-shadow:0 0 8px rgba(43,255,136,.25);
   }
-  .lore p{ margin:8px 0; color:var(--fg); }
+  .lore p{ margin:10px 0; color:var(--fg); }
   .lore .instr{
-    margin-top:10px; color:var(--accent2);
+    margin-top:12px; color:var(--accent2);
     border-top:1px dashed rgba(43,255,136,.25);
     padding-top:10px; font-weight:700;
   }
+  .lore button{
+    margin-top:12px; padding:10px 14px; border-radius:10px;
+    background:rgba(30,30,30,.9); color:#fff; border:2px solid rgba(43,255,136,.35);
+    font-weight:800; cursor:pointer;
+  }
+  .lore .hidden-part{ display:none; }
 
   .blink{ animation: bl 0.12s linear infinite alternate; }
   @keyframes bl { from{opacity:1} to{opacity:.35} }
 </style>
 </head>
-<body><h1>diominchiasbotrtr</h1>
+<body><h1>diominchia</h1>
   <main class="page">
     <!-- HERO -->
     <div class="hero" id="heroBox"></div>
@@ -208,12 +212,16 @@
       <div class="cta" style="margin-top:10px"><button id="startGame">Avvia</button> <button id="restartGame" style="display:none">Riprova</button></div>
     </section>
 
-    <!-- EPILOGO (compare solo dopo clear) -->
+    <!-- EPILOGO (solo dopo clear) -->
     <section class="lore" id="epilogue">
       <h3>Il Sussurro del Pentacolo</h3>
-      <p>Hai composto i simboli proibiti, tracciato il rituale e posizionato il pugnale. La candela nera illumina il centro del pentacolo e dopo aver bruciato i peli pubici della zombie rossa sei sopravvissuto agli incubi di guardia: una voce, profonda e demoniaca ti rivela</p>
-      <p><em>"Ogni rituale demoniaco, per essere portato a compimento ha bisogno di un sacrificio, chi sarà la tua vittima sacrificale?"</em></p>
-      <p class="instr">"A mezzanotte (e solo a mezzanotte) nella Dark Room usa il comando <strong>/Sacrifica</strong> e nomina l'utente. Attenzione però, il malcapitato perderà la metà dei suoi punti esperienza!"</p>
+      <p>Hai composto i simboli proibiti, tracciato il rituale e posizionato il pugnale. La candela nera illumina il centro del pentacolo e dopo aver bruciato i peli pubici della zombie rossa sei sopravvissuto agli incubi di guardia: una voce, profonda e demoniaca ti riconosce.</p>
+      <p class="instr">Mostra a tutti la tua opera, ottieni il tuo ruolo, scrivi in Dark Room <strong>/rispondi</strong> e immetti il codice segreto: <strong>258069759</strong></p>
+      <button id="obeyBtn">Ho Ubbidito, Signore delle Tenebre!</button>
+      <div class="hidden-part" id="sacrificeBlock">
+        <p><em>"Ogni rituale demoniaco, per essere portato a compimento ha bisogno di un sacrificio, chi sarà la tua vittima sacrificale?"</em></p>
+        <p class="instr">"A mezzanotte (e solo a mezzanotte) nella Dark Room usa il comando <strong>/Sacrifica</strong> e nomina l'utente. Attenzione però, il malcapitato perderà la metà dei suoi punti esperienza!"</p>
+      </div>
     </section>
   </main>
 
@@ -228,7 +236,6 @@ document.addEventListener('DOMContentLoaded', () => {
   /* SIMBOLI */
   const SYMBOLS = Array.from({length:12},(_,i)=>({id:String(i+1),src:`./media/${i+1}.png?v=1`}));
   const TARGET = atob("MSwyLDMsNA==").split(","); // "1,2,3,4"
-
   const HINTS=[
     "Spesso gli oggetti dei rituali si nascondono nelle stanze più buie.",
     "Le scope delle streghe nascondono sempre qualcosa.",
@@ -322,6 +329,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const startBtn = document.getElementById('startGame'),
         restartBtn = document.getElementById('restartGame'),
         loadingMsg = document.getElementById('loadingMsg');
+  const wrap = document.getElementById('canvasWrap');
 
   // Immagini
   const playerImg = new Image(); playerImg.src = 'media/zucca.png?v=1';
@@ -341,14 +349,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Stato di gioco
   let running=false, gameOver=false, score=0, lastSpawn=0, lastTs=null;
-  let cleared=false; // ha raggiunto >=666 almeno una volta in questa run?
+  let cleared=false;
 
-  // Velocità mondo
+  // Velocità mondo (+10%)
   let speed = 0.8;
-  const MAX_SPEED = 4.2;
+  const MAX_SPEED = 4.2 * 1.1;      // +10%
   const ACCEL_PER_SEC = 0.04;
   const ACCEL_RAMP_TIME = 90;
   let elapsedRunTime = 0;
+  const SPEED_MULT = 1.1;           // +10% sul targetSpeed
 
   // Sfondo parallax
   let bgOffset = 0;
@@ -362,8 +371,8 @@ document.addEventListener('DOMContentLoaded', () => {
   player.y = ground - player.h;
 
   // Oggetti
-  const obstacles=[];   // {x,y,w,h,img,type:'ground'|'air',scale}
-  const pickups=[];     // {x,y,type:'candle'|'heart', w,h, emoji}
+  const obstacles=[];   // {x,y,w,h,img,type,scale,baseX,baseY,oscA,oscT,oscP}
+  const pickups=[];     // {x,y,type:'candle'|'heart'|'bug', w,h, emoji}
   const spawnQueue=[];  // {type, delay, scale}
 
   // Vite
@@ -396,11 +405,11 @@ document.addEventListener('DOMContentLoaded', () => {
   let upHeld = false;
   const MAX_FLIGHT_ENERGY = 0.5;
   let flightEnergy = MAX_FLIGHT_ENERGY;
-  const FLIGHT_DRAIN = 0.6;     // consumo in volo
-  const FLIGHT_RECHARGE = 0.06; // ricarica ~3x più lenta
-  const FLIGHT_BOOST = 0.70;    // spinta per frame
+  const FLIGHT_DRAIN = 0.6;
+  const FLIGHT_RECHARGE = 0.06;
+  const FLIGHT_BOOST = 0.70;
   const FLIGHT_CLIMB_CAP = -4.2;
-  const FLIGHT_MIN_Y = (airLaneY - 10) - 44; // tetto di volo poco sopra corsia alta
+  const FLIGHT_MIN_Y = (airLaneY - 10) - 44;
 
   function updateChargeBar(){
     const pct = Math.round((flightEnergy / MAX_FLIGHT_ENERGY)*100);
@@ -418,8 +427,13 @@ document.addEventListener('DOMContentLoaded', () => {
   function doDirectionalJump(){
     let vy = BASE_JUMP_VY;
     let impulseX = 0;
-    if(rightHeld && !leftHeld){ vy = BASE_JUMP_VY * 1.05; impulseX = 2.8; }
-    else if(leftHeld && !rightHeld){ vy = BASE_JUMP_VY * 0.62; impulseX = -2.1; }
+    const invert = controlsInverted();
+    const leftActive = invert ? rightHeld : leftHeld;
+    const rightActive = invert ? leftHeld : rightHeld;
+
+    if(rightActive && !leftActive){ vy = BASE_JUMP_VY * 1.05; impulseX = 2.8; }
+    else if(leftActive && !rightActive){ vy = BASE_JUMP_VY * 0.62; impulseX = -2.1; }
+
     player.vy = vy;
     player.vx = Math.max(-MAX_VX, Math.min(MAX_VX, player.vx + impulseX));
     player.onGround = false;
@@ -429,8 +443,34 @@ document.addEventListener('DOMContentLoaded', () => {
     if ((coyoteTimer > 0 || player.onGround) && jumpBufferTimer > 0) doDirectionalJump();
   }
 
+  /* ---------- DISTURBI (shake / invert colori / comandi invertiti da 🐞) ---------- */
+  let shakeTime = 0;
+  let effectTimer = 0, nextEffectAt = 10; // sec
+  let invertFilterTime = 0;
+
+  let controlsInvertUntil = 0;
+  function controlsInverted(){ return performance.now()/1000 < controlsInvertUntil; }
+
+  function maybeScheduleEffect(dt, nowSec){
+    if(score < 500) return;
+    effectTimer += dt;
+    if(effectTimer >= nextEffectAt){
+      effectTimer = 0;
+      nextEffectAt = 8 + Math.random()*6; // ~10s medio
+      if(Math.random() < 0.5){
+        // shake
+        shakeTime = 0.8;
+      } else {
+        // inverti colori
+        invertFilterTime = 1.2;
+        wrap.classList.add('invert');
+      }
+    }
+  }
+
   /* ---------- SPAWN ---------- */
   function drawImage(img, x,y,w,h){ if(img && img.complete && img.naturalWidth) ctx.drawImage(img,x,y,w,h); }
+
   function spawnObstacleNow(type, scale=1){
     const img = monsterImgs[Math.floor(Math.random()*monsterImgs.length)];
     const baseW = 46 + Math.random()*10;
@@ -439,24 +479,37 @@ document.addEventListener('DOMContentLoaded', () => {
     const h = w * ratio;
     const jitterY = (type==='air') ? (Math.random()*12 - 6) : (Math.random()*6 - 3);
     const y = (type==='ground') ? (ground-h + jitterY) : (airLaneY - h/2 + jitterY);
-    obstacles.push({ x:cvs.width+10, y, w, h, img, type, scale });
+    const o = {
+      x:cvs.width+10, y, w, h, img, type, scale,
+      baseX:cvs.width+10, baseY:y,
+      oscA: type==='air' ? (2 + Math.random()*4) : (1 + Math.random()*2), // ampiezza
+      oscT: 1.2 + Math.random()*0.8,              // periodo ~1.2-2.0s
+      oscP: Math.random()*Math.PI*2               // fase
+    };
+    obstacles.push(o);
   }
+
   function shuffleArray(a){ for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j]]; } return a; }
+
   function queuePattern(currentScore){
-    let minC=1, maxC=1, airBias=0.5;
-    if(currentScore > 600){ minC=3; maxC=4; airBias=0.6; }
-    else if(currentScore > 400){ minC=3; maxC=3; airBias=0.55; }
+    // Sempre almeno 2 e GUARANTITI air+ground
+    let minC=2, maxC=2, airBias=0.5;
+    if(currentScore > 600){ minC=4; maxC=4; airBias=0.55; }
+    else if(currentScore > 400){ minC=3; maxC=3; airBias=0.53; }
     else if(currentScore > 200){ minC=2; maxC=2; airBias=0.5; }
 
     const count = Math.floor(Math.random()*(maxC-minC+1))+minC;
-    const types=[];
+
+    let types=[];
     for(let i=0;i<count;i++) types.push(Math.random() < airBias ? 'air' : 'ground');
-    if(count>=2){ if(!types.includes('air')) types[0]='air'; if(!types.includes('ground')) types[types.length-1]='ground'; }
+    // forza almeno uno per ciascuna corsia
+    if(!types.includes('air')) types[0]='air';
+    if(!types.includes('ground')) types[types.length-1]='ground';
     shuffleArray(types);
 
-    const BASE_GAP = 0.18 + Math.random()*0.08;
-    const JITTER = 0.12;
-    const startOffset = Math.random()*0.28;
+    const BASE_GAP = 0.22 + Math.random()*0.1; // un filo più largo per evitare muri
+    const JITTER = 0.14;
+    const startOffset = Math.random()*0.3;
     const scaleBase = 0.9 + Math.min(0.3, currentScore/1000);
     types.forEach((t, idx)=>{
       const delay = startOffset + idx*BASE_GAP + (Math.random()*2*JITTER - JITTER);
@@ -465,7 +518,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // Collezionabili
+  // Collezionabili (aggiunto 🐞)
   const PICKUP_CHANCE = 0.20;
   const PICKUP_COOLDOWN = 4.0;
   let lastPickupTime = -Infinity;
@@ -473,16 +526,21 @@ document.addEventListener('DOMContentLoaded', () => {
   function spawnPickup(){
     const now = performance.now() / 1000;
     if(now - lastPickupTime < PICKUP_COOLDOWN) return false;
-    const type = Math.random() < 0.5 ? 'candle' : 'heart';
+
+    // dopo 500 punti includi anche il bug
+    const pool = (score >= 500) ? ['candle','heart','bug'] : ['candle','heart'];
+    const type = pool[Math.floor(Math.random()*pool.length)];
     const lane = Math.random() < 0.5 ? 'air' : 'ground';
-    const emoji = type === 'candle' ? '🕯️' : '❤️';
+    const emoji = type === 'candle' ? '🕯️' : (type === 'heart' ? '❤️' : '🐞');
     const fontSize = 24;
     const w = fontSize, h = fontSize;
     const y = lane === 'ground' ? (ground - h - 6) : (airLaneY - h/2);
+
     pickups.push({ x:cvs.width+10, y, w, h, emoji, type });
     lastPickupTime = now;
     return true;
   }
+
   function drawPickup(p){
     ctx.font = "24px system-ui, Apple Color Emoji, Segoe UI Emoji, Noto Color Emoji";
     ctx.textBaseline = "top";
@@ -494,23 +552,32 @@ document.addEventListener('DOMContentLoaded', () => {
     running=false; gameOver=false; score=0; lastTs=null; lastSpawn=0; cleared=false;
     overlay.style.display='none'; overlayBox.textContent='';
     obstacles.length=0; pickups.length=0; spawnQueue.length=0;
-    speed=0.8; elapsedRunTime=0;
+
+    speed=0.8; elapsedRunTime=0; effectTimer=0; nextEffectAt=10;
+    shakeTime=0; invertFilterTime=0; wrap.classList.remove('invert');
+    controlsInvertUntil=0;
+
     flightEnergy = MAX_FLIGHT_ENERGY; updateChargeBar();
+
     player.x=120; player.y=ground-player.h; player.vx=0; player.vy=0; player.onGround=true;
     scoreHudEl.textContent='0'; scoreEl.textContent='0';
     coyoteTimer = 0; jumpBufferTimer = 0; jumpHeld = false; leftHeld=false; rightHeld=false; upHeld=false;
     invuln = 0; lives = MAX_LIVES; renderLives();
     cvs.classList.remove('blink');
     lastPickupTime = -Infinity;
-    epilogue.style.display='none'; // nascondi sempre all’inizio di una nuova run
+
+    epilogue.style.display='none';
+    document.getElementById('sacrificeBlock').style.display='none';
   }
+
   function endGame(){
     gameOver = true; running = false;
     overlay.style.display='flex';
+    const finalScore = Math.floor(score);
     if(cleared){
       overlayBox.style.color = 'var(--ok)';
-      overlayBox.textContent = 'XXXX';
-      epilogue.style.display = 'block'; // Mostra l’epilogo solo se hai raggiunto 666
+      overlayBox.textContent = String(finalScore); // mostra solo il punteggio
+      epilogue.style.display = 'block';
     } else {
       overlayBox.style.color = 'var(--err)';
       overlayBox.textContent = 'Ritenta quante volte vuoi, tanto non ci riuscirai mai!';
@@ -519,6 +586,7 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('restartGame').style.display='inline-block';
     cvs.classList.remove('blink');
   }
+
   function hitPlayer(){
     if(invuln > 0 || gameOver) return;
     lives -= 1; renderLives();
@@ -528,11 +596,13 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   /* ---------- LOOP ---------- */
+  let timeSec = 0;
+
   function drawBackground(){
     if(bgImg && bgImg.complete && bgImg.naturalWidth){
       const bw = bgImg.naturalWidth, bh = bgImg.naturalHeight;
       const scale = cvs.height / bh, drawW = bw * scale;
-      bgOffset = (bgOffset - (speed * 0.42)) % drawW;
+      bgOffset = (bgOffset - (speed * BG_PARALLAX)) % drawW;
       if(bgOffset < -drawW) bgOffset += drawW;
       for(let x=bgOffset; x < cvs.width + drawW; x += drawW){
         ctx.drawImage(bgImg, 0, 0, bw, bh, Math.floor(x), 0, Math.ceil(drawW), cvs.height);
@@ -547,12 +617,14 @@ document.addEventListener('DOMContentLoaded', () => {
   function loop(ts){
     if(!running) return;
     const delta = lastTs ? (ts-lastTs)/1000 : 0; lastTs = ts;
+    timeSec += delta;
     elapsedRunTime += delta;
 
-    // Velocità mondo
+    // Velocità mondo (+10% globale)
     const t = Math.min(1, elapsedRunTime / ACCEL_RAMP_TIME);
     const eased = t*t*(3 - 2*t);
-    const targetSpeed = 0.8 + (MAX_SPEED - 0.8) * eased;
+    const baseTarget = 0.8 + (4.2 - 0.8) * eased;
+    const targetSpeed = baseTarget * SPEED_MULT;
     speed += (targetSpeed - speed) * ACCEL_PER_SEC;
 
     // Punteggio e flag clear
@@ -560,7 +632,23 @@ document.addEventListener('DOMContentLoaded', () => {
     const shown = Math.floor(score);
     scoreHudEl.textContent = shown;
     scoreEl.textContent = shown;
-    if(!cleared && score >= TARGET_SCORE){ cleared = true; } // non fermare la run
+    if(!cleared && score >= TARGET_SCORE){ cleared = true; }
+
+    // Disturbi dopo 500
+    maybeScheduleEffect(delta, timeSec);
+
+    // shake & invert timers
+    if(invertFilterTime > 0){ invertFilterTime -= delta; if(invertFilterTime <= 0){ wrap.classList.remove('invert'); } }
+    if(shakeTime > 0) shakeTime -= delta;
+
+    // background (eventuale shake)
+    ctx.save();
+    if(shakeTime > 0){
+      const s = 2.5; // shake lieve
+      const ox = (Math.random()*2-1)*s;
+      const oy = (Math.random()*2-1)*s;
+      ctx.translate(ox, oy);
+    }
 
     drawBackground();
 
@@ -604,16 +692,31 @@ document.addEventListener('DOMContentLoaded', () => {
       if(px < ox + ow && px + pw > ox && py < oy + oh && py + ph > oy){
         if(p.type === 'candle'){ score += 50; }
         else if(p.type === 'heart'){ if(lives < MAX_LIVES){ lives += 1; renderLives(); } }
+        else if(p.type === 'bug'){ controlsInvertUntil = performance.now()/1000 + 5; } // 5s comandi invertiti
         pickups.splice(i,1);
       }
     }
 
-    // ostacoli
+    // ostacoli (con oscillazioni dopo 300)
     for(let i=obstacles.length-1;i>=0;i--){
       const o=obstacles[i];
-      o.x -= speed;
+      o.baseX -= speed;
+      // oscillazioni
+      let drawX = o.baseX;
+      let drawY = o.baseY;
+      if(score >= 300){
+        const phase = (timeSec + o.oscP) * (2*Math.PI / o.oscT);
+        if(o.type === 'air'){
+          drawY = o.baseY + Math.sin(phase) * o.oscA;       // su/giu
+        } else {
+          drawX = o.baseX + Math.sin(phase) * (o.oscA*0.8); // avanti/indietro
+        }
+      }
+      o.x = drawX; o.y = drawY;
+
       drawImage(o.img, o.x, o.y, o.w, o.h);
       if(o.x + o.w < 0) obstacles.splice(i,1);
+
       const padP = 10, padO = 12;
       const px=player.x+padP, py=player.y+padP, pw=player.w-2*padP, ph=player.h-2*padP;
       const ox=o.x+padO, oy=o.y+padO, ow=o.w-2*padO, oh=o.h-2*padO;
@@ -621,11 +724,16 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     /* --- Fisica player --- */
+    const invert = controlsInverted();
+    const leftActive = invert ? rightHeld : leftHeld;
+    const rightActive = invert ? leftHeld : rightHeld;
+
     const accel = player.onGround ? MOVE_ACCEL : MOVE_ACCEL_AIR;
-    if(leftHeld && !rightHeld)  player.vx -= accel;
-    else if(rightHeld && !leftHeld) player.vx += accel;
+    if(leftActive && !rightActive)  player.vx -= accel;
+    else if(rightActive && !leftActive) player.vx += accel;
     else player.vx *= FRICTION;
     player.vx = Math.max(-MAX_VX, Math.min(MAX_VX, player.vx));
+
     player.x += player.vx;
     const minX = 20, maxX = cvs.width * 0.7;
     if(player.x < minX){ player.x = minX; player.vx = Math.max(0, player.vx); }
@@ -634,7 +742,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // gravità
     player.vy += GRAVITY;
 
-    // volo (tenendo ↑)
+    // volo
     if(upHeld && !player.onGround && flightEnergy > 0){
       player.vy -= FLIGHT_BOOST;
       if(player.vy < FLIGHT_CLIMB_CAP) player.vy = FLIGHT_CLIMB_CAP;
@@ -677,6 +785,7 @@ document.addEventListener('DOMContentLoaded', () => {
       drawImage(playerImg, player.x, player.y, player.w, player.h);
     }
 
+    ctx.restore();
     requestAnimationFrame(loop);
   }
 
@@ -684,9 +793,11 @@ document.addEventListener('DOMContentLoaded', () => {
   window.addEventListener('keydown', async (e)=>{
     const tag=document.activeElement && document.activeElement.tagName;
     if(tag==='INPUT' || tag==='TEXTAREA') return;
+
     if(e.code==='ArrowLeft'){ leftHeld = true; }
     if(e.code==='ArrowRight'){ rightHeld = true; }
     if(e.code==='ArrowUp'){ upHeld = true; }
+
     if(e.code==='Space' || e.code==='ArrowUp'){
       e.preventDefault();
       if(gameOver){ resetGame(); await startGame(); return; }
@@ -721,9 +832,14 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('startGame').onclick = startGame;
   document.getElementById('restartGame').onclick = ()=>{ resetGame(); startGame(); };
 
+  // Epilogo: mostra la parte del sacrificio al click
+  document.getElementById('obeyBtn').addEventListener('click', ()=>{
+    document.getElementById('sacrificeBlock').style.display='block';
+  });
+
   // ready
   renderLives(); updateChargeBar();
-  epilogue.style.display='none'; // sicurezza
+  epilogue.style.display='none';
 });
 </script>
 </body>
