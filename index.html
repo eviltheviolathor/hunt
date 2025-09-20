@@ -101,7 +101,7 @@
   @keyframes bl { from{opacity:1} to{opacity:.35} }
 </style>
 </head>
-<body><h1>diominchia</h1>
+<body><h1>diominch433535353535535ia</h1>
   <main class="page">
     <!-- HERO -->
     <div class="hero" id="heroBox"></div>
@@ -152,7 +152,7 @@
       </div>
       <div class="hud">Controlli: <strong>←</strong>/<strong>→</strong> muovi, <strong>SPAZIO</strong> o <strong>↑</strong> salta. Punteggio: <span class="score" id="score">0</span></div>
       <div class="loading" id="loadingMsg">Caricamento immagini…</div>
-      <div class="win" id="winMsg" style="display:none">✦ Hai domato la Zucca! Livello superato. ✦</div>
+      <div class="win" id="endMsg" style="display:none"></div>
       <div class="cta" style="margin-top:10px"><button id="startGame">Avvia</button> <button id="restartGame" style="display:none">Riprova</button></div>
     </section>
   </main>
@@ -247,7 +247,7 @@ document.addEventListener('DOMContentLoaded', () => {
   ;[f1,f2,f3].forEach(el=>el.addEventListener('keydown',e=>{ if(e.key==='Enter') submitRitual(); e.stopPropagation(); }));
 
   /* =========================
-     MINIGIOCO — Pumpkin Runner (vite, corsia alta, movimento, parallax, collezionabili)
+     MINIGIOCO — Pumpkin Runner (difficoltà dinamica + collezionabili)
      ========================= */
   const TARGET_SCORE = 666;
 
@@ -258,7 +258,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const livesHud = document.getElementById('livesHud');
   const startBtn = document.getElementById('startGame'),
         restartBtn = document.getElementById('restartGame'),
-        winMsg = document.getElementById('winMsg'),
+        endMsg = document.getElementById('endMsg'),
         loadingMsg = document.getElementById('loadingMsg');
 
   // Immagini
@@ -273,18 +273,18 @@ document.addEventListener('DOMContentLoaded', () => {
     if(toLoad.length===0) return Promise.resolve();
     return Promise.allSettled(toLoad.map(img => new Promise(res=>{
       img.addEventListener('load', res, {once:true});
-      img.addEventListener('error', res, {once:true}); // anche in errore “sblocca”
+      img.addEventListener('error', res, {once:true});
     })));
   }
 
   // Stato di gioco
   let running=false, gameOver=false, score=0, lastSpawn=0, lastTs=null;
 
-  // Velocità mondo MOLTO più progressiva
-  let speed = 0.8;                 // lentissimo all'inizio
-  const MAX_SPEED = 4.2;           // tetto massimo più basso
-  const ACCEL_PER_SEC = 0.04;      // accelerazione morbida
-  const ACCEL_RAMP_TIME = 90;      // secondi per arrivare “su di giri” (più lungo = più progressivo)
+  // Velocità mondo (già approvata)
+  let speed = 0.8;
+  const MAX_SPEED = 4.2;
+  const ACCEL_PER_SEC = 0.04;
+  const ACCEL_RAMP_TIME = 90;
   let elapsedRunTime = 0;
 
   // Sfondo parallax
@@ -292,7 +292,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const BG_PARALLAX = 0.42;
 
   const ground = cvs.height - 40;
-  const airLaneY = ground - 150;   // corsia alta (nemici “in aria”)
+  const airLaneY = ground - 150;
 
   // Player con movimento orizzontale
   const player = { x:120, y:0, w:44, h:44, vx:0, vy:0, onGround:true };
@@ -305,7 +305,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // Vite
   const MAX_LIVES = 3;
   let lives = MAX_LIVES;
-  let invuln = 0;                 // secondi di invulnerabilità post-hit
+  let invuln = 0;
 
   function renderLives(){
     livesHud.innerHTML='';
@@ -324,10 +324,10 @@ document.addEventListener('DOMContentLoaded', () => {
   const COYOTE_TIME = 0.14;
   const JUMP_BUFFER = 0.16;
 
-  const MOVE_ACCEL = 0.20;         // accelerazione orizzontale a terra
-  const MOVE_ACCEL_AIR = 0.12;     // in aria controlli minori
-  const MAX_VX = 3.0;              // velocità orizzontale player massima
-  const FRICTION = 0.86;           // attrito quando non premi nulla
+  const MOVE_ACCEL = 0.20;
+  const MOVE_ACCEL_AIR = 0.12;
+  const MAX_VX = 3.0;
+  const FRICTION = 0.86;
 
   let coyoteTimer = 0;
   let jumpBufferTimer = 0;
@@ -338,22 +338,18 @@ document.addEventListener('DOMContentLoaded', () => {
   function requestJump(){ jumpBufferTimer = JUMP_BUFFER; }
 
   function doDirectionalJump(){
-    // Salto base
     let vy = BASE_JUMP_VY;
     let impulseX = 0;
-
-    // → + salto: salto PIÙ BASSO ma LUNGO — lo alziamo un po' (più negativo) rispetto a prima
+    // → + salto: leggermente più alto e lungo
     if(rightHeld && !leftHeld){
-      vy = BASE_JUMP_VY * 1.05;     // leggermente più alto (es. -11.55)
-      impulseX = 2.8;               // spinta in avanti
+      vy = BASE_JUMP_VY * 1.05;     // più alto di poco (es. -11.55)
+      impulseX = 2.8;
     }
-    // ← + salto: SALTELLO CORTO E BASSO ALL’INDIETRO
+    // ← + salto: saltello corto e basso all’indietro
     else if(leftHeld && !rightHeld){
-      vy = BASE_JUMP_VY * 0.62;     // basso
-      impulseX = -2.1;              // spinta indietro
+      vy = BASE_JUMP_VY * 0.62;
+      impulseX = -2.1;
     }
-    // entrambi o nessuno => salto normale
-
     player.vy = vy;
     player.vx += impulseX;
     player.vx = Math.max(-MAX_VX, Math.min(MAX_VX, player.vx));
@@ -368,14 +364,41 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  function spawnObstacle(){
+  // --- Spawner nemici/pickup ---
+  function spawnObstacleOfType(type, xOffset=0){
     const img = monsterImgs[Math.floor(Math.random()*monsterImgs.length)];
     const w = 46 + Math.random()*10;
     const ratio = (img && img.naturalWidth) ? (img.naturalHeight/img.naturalWidth) : 1.2;
     const h = w * ratio;
-    const type = Math.random() < 0.5 ? 'air' : 'ground'; // 50% in alto, 50% a terra
     const y = (type==='ground') ? (ground-h) : (airLaneY - h/2);
-    obstacles.push({ x:cvs.width+10, y, w, h, img, type });
+    obstacles.push({ x:cvs.width+10 + xOffset, y, w, h, img, type });
+  }
+
+  function spawnObstaclePattern(currentScore){
+    // pattern in base al punteggio
+    if(currentScore > 600){
+      // quadruplo: 2 sopra + 2 sotto
+      const gaps=[0, 30, 60, 90]; // piccoli offset per evitare sovrapposizione
+      spawnObstacleOfType('air', gaps[0]);
+      spawnObstacleOfType('air', gaps[1]);
+      spawnObstacleOfType('ground', gaps[2]);
+      spawnObstacleOfType('ground', gaps[3]);
+    } else if(currentScore > 400){
+      // triplo: 2 sopra + 1 sotto
+      const gaps=[0, 35, 70];
+      spawnObstacleOfType('air', gaps[0]);
+      spawnObstacleOfType('air', gaps[1]);
+      spawnObstacleOfType('ground', gaps[2]);
+    } else if(currentScore > 200){
+      // doppio: 1 sopra + 1 sotto
+      const gaps=[0, 40];
+      spawnObstacleOfType('air', gaps[0]);
+      spawnObstacleOfType('ground', gaps[1]);
+    } else {
+      // singolo: casuale
+      const type = Math.random() < 0.5 ? 'air' : 'ground';
+      spawnObstacleOfType(type, 0);
+    }
   }
 
   // --- Collezionabili ---
@@ -387,11 +410,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const now = performance.now() / 1000;
     if(now - lastPickupTime < PICKUP_COOLDOWN) return false;
 
-    // Posizione: o a livello corsia alta o poco sopra il terreno
-    const type = Math.random() < 0.5 ? 'candle' : 'heart'; // ripartizione 50/50 tra i due, dato il 20% globale risultano rari
+    const type = Math.random() < 0.5 ? 'candle' : 'heart'; // 50/50 tra candela e cuore
     const lane = Math.random() < 0.5 ? 'air' : 'ground';
     const emoji = type === 'candle' ? '🕯️' : '❤️';
-    const fontSize = 24; // px
+    const fontSize = 24;
     const w = fontSize, h = fontSize;
     const y = lane === 'ground' ? (ground - h - 6) : (airLaneY - h/2);
 
@@ -429,7 +451,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function resetGame(){
     running=false; gameOver=false; score=0; lastTs=null; lastSpawn=0;
-    winMsg.style.display='none';
+    endMsg.style.display='none'; endMsg.textContent='';
     obstacles.length=0; pickups.length=0;
 
     // reset velocità mondo e easing
@@ -444,14 +466,31 @@ document.addEventListener('DOMContentLoaded', () => {
     lastPickupTime = -Infinity;
   }
 
+  function endGameSuccess(){
+    gameOver = true; running = false;
+    endMsg.style.display='block';
+    endMsg.style.color = 'var(--ok)';
+    endMsg.textContent = 'XXXX';
+    restartBtn.style.display='inline-block';
+    cvs.classList.remove('blink');
+  }
+
+  function endGameFailure(){
+    gameOver = true; running = false;
+    endMsg.style.display='block';
+    endMsg.style.color = 'var(--err)';
+    endMsg.textContent = 'Ritenta quante volte vuoi, tanto non ci riuscirai mai!';
+    restartBtn.style.display='inline-block';
+    cvs.classList.remove('blink');
+  }
+
   function hitPlayer(){
     if(invuln > 0 || gameOver) return;
     lives -= 1; renderLives();
-    invuln = 1.2; // 1.2s invulnerabile
+    invuln = 1.2;
     cvs.classList.add('blink');
     if(lives <= 0){
-      gameOver = true; running = false; cvs.classList.remove('blink');
-      restartBtn.style.display='inline-block';
+      endGameFailure();
     }
   }
 
@@ -460,9 +499,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const delta = lastTs ? (ts-lastTs)/1000 : 0; lastTs = ts;
     elapsedRunTime += delta;
 
-    // Easing sulla velocità (smoothstep su 90s) + filtro lento
+    // Easing sulla velocità (smoothstep su 90s) + filtro
     const t = Math.min(1, elapsedRunTime / ACCEL_RAMP_TIME);
-    const eased = t*t*(3 - 2*t); // smoothstep
+    const eased = t*t*(3 - 2*t);
     const targetSpeed = 0.8 + (MAX_SPEED - 0.8) * eased;
     speed += (targetSpeed - speed) * ACCEL_PER_SEC;
 
@@ -472,30 +511,34 @@ document.addEventListener('DOMContentLoaded', () => {
     scoreHudEl.textContent = shown;
     scoreEl.textContent = shown;
 
+    // Successo raggiunto
     if(score >= TARGET_SCORE && !gameOver){
-      running=false; gameOver=true; winMsg.style.display='block'; restartBtn.style.display='inline-block';
-      cvs.classList.remove('blink');
+      endGameSuccess();
     }
 
     // Sfondo
     drawBackground();
 
-    // linee pista (terra & corsia alta)
+    // linee pista
     ctx.strokeStyle='rgba(43,255,136,.3)';
     ctx.beginPath(); ctx.moveTo(0,ground+0.5); ctx.lineTo(cvs.width,ground+0.5); ctx.stroke();
     ctx.setLineDash([6,6]); ctx.beginPath(); ctx.moveTo(0,airLaneY+0.5); ctx.lineTo(cvs.width,airLaneY+0.5); ctx.stroke(); ctx.setLineDash([]);
 
-    // spawn: a intervalli ampi, con chance di pickup
-    const baseInterval = 2400 - speed*90;     // scende lentamente con speed (più progressivo)
+    // spawn: ampio e con pattern in base al punteggio
+    const baseInterval = 2400 - speed*90;
     const jitter = 900 * Math.random();
     const interval = Math.max(1400, baseInterval + jitter);
 
     if(ts - lastSpawn > interval){
       lastSpawn = ts;
-      if(Math.random() < PICKUP_CHANCE){
-        if(!spawnPickup()){ spawnObstacle(); } // se cooldown attivo, fallback a ostacolo
+
+      // Se NON abbiamo superato i 666 punti, chance di pickup al posto dei nemici
+      if(score < TARGET_SCORE && Math.random() < PICKUP_CHANCE){
+        if(!spawnPickup()){
+          spawnObstaclePattern(score); // se in cooldown, spawna nemici
+        }
       } else {
-        spawnObstacle();
+        spawnObstaclePattern(score);
       }
     }
 
@@ -506,17 +549,14 @@ document.addEventListener('DOMContentLoaded', () => {
       drawPickup(p);
       if(p.x + p.w < 0){ pickups.splice(i,1); continue; }
 
-      // collisione con player (hitbox gentile sugli emoji)
+      // collisione con player
       const padP = 8, padO = 4;
       const px=player.x+padP, py=player.y+padP, pw=player.w-2*padP, ph=player.h-2*padP;
       const ox=p.x+padO, oy=p.y+padO, ow=p.w-2*padO, oh=p.h-2*padO;
       const overlap = (px < ox + ow && px + pw > ox && py < oy + oh && py + ph > oy);
       if(overlap){
-        if(p.type === 'candle'){
-          score += 50;
-        } else if(p.type === 'heart'){
-          if(lives < MAX_LIVES){ lives += 1; renderLives(); }
-        }
+        if(p.type === 'candle'){ score += 50; }
+        else if(p.type === 'heart'){ if(lives < MAX_LIVES){ lives += 1; renderLives(); } }
         pickups.splice(i,1);
       }
     }
@@ -524,7 +564,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- UPDATE & DRAW ostacoli ---
     for(let i=obstacles.length-1;i>=0;i--){
       const o=obstacles[i];
-      o.x -= speed; // mondo scorre a sinistra
+      o.x -= speed;
       drawImage(o.img, o.x, o.y, o.w, o.h);
       if(o.x + o.w < 0) obstacles.splice(i,1);
 
@@ -542,14 +582,14 @@ document.addEventListener('DOMContentLoaded', () => {
     const accel = player.onGround ? MOVE_ACCEL : MOVE_ACCEL_AIR;
     if(leftHeld && !rightHeld)  player.vx -= accel;
     else if(rightHeld && !leftHeld) player.vx += accel;
-    else player.vx *= FRICTION; // nessun input => attrito
+    else player.vx *= FRICTION;
 
     // clamp velocità orizzontale
     player.vx = Math.max(-MAX_VX, Math.min(MAX_VX, player.vx));
 
-    // aggiorna posizione X, restando dentro i limiti visuali
+    // aggiorna X con limiti
     player.x += player.vx;
-    const minX = 20, maxX = cvs.width * 0.7; // non oltre il 70% a destra
+    const minX = 20, maxX = cvs.width * 0.7;
     if(player.x < minX){ player.x = minX; player.vx = Math.max(0, player.vx); }
     if(player.x > maxX){ player.x = maxX; player.vx = Math.min(0, player.vx); }
 
