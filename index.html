@@ -12,124 +12,68 @@
     --accent:#2bff88; --accent2:#6bffda;
     --card:#0d0d0d; --ok:#22c55e; --err:#ff4d4d;
   }
-
   *{box-sizing:border-box}
-
   html,body{
-    height:100%; margin:0;
-    background:radial-gradient(circle at 50% 15%, #111 0%, #000 80%);
+    margin:0; background:radial-gradient(circle at 50% 15%, #111 0%, #000 80%);
     color:var(--fg); font-family:'Cinzel Decorative', serif;
   }
 
   .page{
-    min-height:100vh; max-width:1600px; margin:0 auto;
-    padding:28px 24px 56px;
-    display:flex; flex-direction:column; align-items:center;
-    justify-content:flex-start; text-align:center;
+    max-width:1600px; margin:0 auto; padding:16px;
+    display:flex; flex-direction:column; align-items:center; text-align:center;
   }
 
-  .hero{
-    width:100%; max-width:1400px; margin:0 auto 18px;
-    display:flex; justify-content:center;
-  }
-  .hero img{ width:100%; height:auto; display:block; border-radius:10px; }
+  .hero{width:100%; max-width:1000px; margin:0 auto 16px;}
+  .hero img{width:100%; height:auto; display:block; border-radius:10px}
 
-  h1{
-    font-size:clamp(28px,4vw,48px); margin:12px 0 8px; letter-spacing:.08em;
-    color:var(--accent);
-    text-shadow:0 0 12px var(--accent), 0 0 28px var(--accent2);
-  }
-  .sub{ color:var(--muted); margin:0 0 26px; font-size:1.05rem; }
+  h1{font-size:clamp(24px,5vw,42px); margin:12px 0; color:var(--accent);
+     text-shadow:0 0 12px var(--accent), 0 0 28px var(--accent2)}
+  .sub{color:var(--muted); margin:0 0 18px; font-size:clamp(14px,2vw,18px)}
 
-  .panel{
-    display:grid; grid-template-columns:repeat(4, minmax(320px, 1fr));
-    gap:28px; width:100%; max-width:1400px; padding:24px;
-    border-radius:20px; margin:0 auto;
-    background:rgba(20,20,20,0.85);
-    box-shadow:0 0 40px rgba(43,255,136,.25), inset 0 0 20px rgba(43,255,136,.15);
-  }
+  .panel{display:grid; grid-template-columns:repeat(auto-fit, minmax(220px,1fr));
+         gap:20px; width:100%; max-width:1200px; padding:16px;
+         border-radius:16px; margin:0 auto;
+         background:rgba(20,20,20,.85);
+         box-shadow:0 0 40px rgba(43,255,136,.25), inset 0 0 20px rgba(43,255,136,.15);}
+  .slot{background:var(--card); border:2px solid rgba(43,255,136,.3); border-radius:16px;
+        padding:12px; display:flex; align-items:center; justify-content:center; gap:10px;
+        min-height:clamp(200px,25vw,300px);}
+  .symbol{flex:1; display:flex; align-items:center; justify-content:center;}
+  .symbol img{max-width:100%; max-height:clamp(160px,20vw,260px); object-fit:contain}
+  .fallback{color:var(--accent2); font-size:.9rem; padding:6px; text-align:center}
 
-  .slot{
-    background:radial-gradient(300px 300px at 50% 30%, rgba(43,255,136,.08), transparent 70%), var(--card);
-    border:2px solid rgba(43,255,136,.3); border-radius:22px; padding:18px;
-    display:flex; align-items:center; justify-content:center; gap:14px;
-    min-height:340px; box-shadow:inset 0 0 20px rgba(43,255,136,.15);
-  }
+  .arrow{width:40px; height:40px; display:flex; align-items:center; justify-content:center;
+         font-size:20px; cursor:pointer; color:var(--fg);
+         background:rgba(30,30,30,.8); border:1px solid rgba(43,255,136,.3); border-radius:8px}
+  .arrow:hover{background:rgba(43,255,136,.15)}
 
-  .symbol{
-    width:300px; height:300px; border-radius:18px;
-    background:rgba(0,0,0,.6);
-    display:flex; align-items:center; justify-content:center;
-    border:1px solid rgba(43,255,136,.4);
-    box-shadow:0 0 20px rgba(43,255,136,.15), inset 0 0 15px rgba(43,255,136,.1);
-    overflow:hidden;
-  }
-  .symbol img{ width:280px; height:280px; object-fit:contain; display:block; }
+  .action{margin:16px 0; display:flex; gap:12px; justify-content:center}
+  button{appearance:none; border:0; cursor:pointer; border-radius:8px;
+         padding:10px 16px; font-weight:700; font-size:1rem;
+         background:rgba(30,30,30,.9); color:var(--fg); border:2px solid rgba(43,255,136,.3);
+         font-family:'Cinzel Decorative', serif}
+  button:hover{background:rgba(43,255,136,.15)}
 
-  .fallback{
-    width:100%; height:100%; display:flex; align-items:center; justify-content:center;
-    color:var(--accent2); font-size:0.95rem; padding:10px; text-wrap:balance;
-    background:rgba(0,0,0,.4);
-  }
+  .msg{min-height:28px; font-size:1.1rem; margin-top:6px}
+  .success{color:var(--ok)}
+  .fail{color:var(--err)}
 
-  .arrow{
-    width:60px; height:60px; display:flex; align-items:center; justify-content:center;
-    font-size:32px; user-select:none; cursor:pointer; color:var(--fg);
-    background:rgba(30,30,30,.8); border:1px solid rgba(43,255,136,.3); border-radius:12px;
-    transition:all .2s ease;
-  }
-  .arrow:hover{ background:rgba(43,255,136,.15); }
+  .footer{margin-top:18px; color:var(--accent2); font-size:.95rem}
 
-  .action{ margin:26px 0 8px; display:flex; gap:14px; justify-content:center; }
-  button{
-    appearance:none; border:0; cursor:pointer; border-radius:12px;
-    padding:12px 18px; font-weight:700; font-size:1rem;
-    background:rgba(30,30,30,.9); color:var(--fg); border:2px solid rgba(43,255,136,.3);
-    font-family:'Cinzel Decorative', serif; transition:all .2s ease;
-  }
-  button:hover{ background:rgba(43,255,136,.15); }
+  #rituale{display:none; width:100%; max-width:900px; margin:24px auto 0}
+  .rituale-text{margin:12px auto 20px; line-height:1.4; color:var(--fg); font-size:clamp(14px,2vw,18px)}
 
-  .msg{ min-height:34px; font-size:1.25rem; margin-top:8px; }
-  .success{ color:var(--ok); text-shadow:0 0 10px var(--ok); }
-  .fail{ color:var(--err); text-shadow:0 0 8px var(--err); }
-
-  .footer{ margin-top:24px; color:var(--accent2); font-size:1.1rem;
-    text-shadow:0 0 6px rgba(43,255,136,.35); }
-
-  #rituale{ display:none; width:100%; max-width:1100px; margin:28px auto 0; }
-  .rituale-text{
-    margin:18px auto 22px; line-height:1.5; color:var(--fg); max-width:1000px;
-    text-shadow:0 0 8px rgba(43,255,136,.2);
-  }
-  .pentacolo{
-    position:relative; width:min(90vw, 800px); height:min(90vw, 800px);
-    margin:0 auto 16px;
-  }
-  .rit-field{
-    position:absolute; transform:translate(-50%, -50%);
-    width:min(60vw, 360px);
-  }
-  .rit-field input{
-    width:100%; padding:12px 14px; border-radius:12px;
-    border:2px solid rgba(43,255,136,.35); background:rgba(10,10,10,.85);
-    color:var(--fg); font-family:'Cinzel Decorative', serif; font-size:1rem;
-    box-shadow:inset 0 0 12px rgba(43,255,136,.12);
-  }
-  .rit-btn{
-    position:absolute; left:50%; top:50%; transform:translate(-50%, -50%);
-    z-index:3;
-  }
-  .rit-msg{ min-height:28px; margin-top:8px; }
-
-  @media (max-width:1200px){ .panel{ grid-template-columns:repeat(2, minmax(320px, 1fr)); } }
-  @media (max-width:680px){ .panel{ grid-template-columns:1fr; } }
+  .pentacolo{position:relative; width:min(90vw,600px); height:min(90vw,600px); margin:0 auto 16px}
+  .rit-field{position:absolute; transform:translate(-50%,-50%); width:70%}
+  .rit-field input{width:100%; padding:8px 12px; border-radius:8px; border:2px solid rgba(43,255,136,.35);
+                   background:rgba(10,10,10,.85); color:var(--fg); font-size:1rem}
+  .rit-btn{position:absolute; left:50%; top:50%; transform:translate(-50%,-50%)}
+  .rit-msg{min-height:20px; margin-top:8px; font-size:1rem}
 </style>
 </head>
 <body>
   <main class="page">
-    <div class="hero">
-      <img src="media/home.png" alt="Il Rituale">
-    </div>
+    <div class="hero"><img src="media/home.png" alt="Il Rituale"></div>
 
     <h1>Combinazione di Simboli</h1>
     <p class="sub">Allinea i quattro simboli corretti per risvegliare l'oscuro portale.</p>
@@ -141,16 +85,10 @@
       <button id="check">Verifica</button>
     </div>
     <div id="message" class="msg"></div>
-
     <div class="footer" id="hintBox"></div>
 
     <section id="rituale">
-      <p class="rituale-text">
-        <strong>Bene, molto bene.</strong> Quindi Herr Knock ti ha insegnato molto.
-        Per procedere con il rituale è fondamentale trovare i tre ingredienti per
-        <em>Evocare il Principe delle Tenebre</em>. Credo che tu possa trovarli all'interno del server,
-        ma non sarà facile.
-      </p>
+      <p class="rituale-text" id="ritText"></p>
 
       <div class="pentacolo">
         <svg viewBox="0 0 100 100" width="100%" height="100%" aria-hidden="true"
@@ -159,20 +97,11 @@
           <polygon points="50,6 61,40 96,40 67,60 78,94 50,73 22,94 33,60 4,40 39,40"
                    fill="none" stroke="rgba(43,255,136,.55)" stroke-width="2"/>
         </svg>
-
-        <div class="rit-field" style="left:50%; top:10%;">
-          <input id="f1" type="text" placeholder="Ingrediente I">
-        </div>
-        <div class="rit-field" style="left:20%; top:75%;">
-          <input id="f2" type="text" placeholder="Ingrediente II">
-        </div>
-        <div class="rit-field" style="left:80%; top:75%;">
-          <input id="f3" type="text" placeholder="Ingrediente III">
-        </div>
-
+        <div class="rit-field" style="left:50%; top:10%;"><input id="f1" type="text" placeholder="Ingrediente I"></div>
+        <div class="rit-field" style="left:20%; top:75%;"><input id="f2" type="text" placeholder="Ingrediente II"></div>
+        <div class="rit-field" style="left:80%; top:75%;"><input id="f3" type="text" placeholder="Ingrediente III"></div>
         <button class="rit-btn" id="completeBtn">Completa</button>
       </div>
-
       <div id="ritMsg" class="rit-msg"></div>
     </section>
 
@@ -180,134 +109,111 @@
   </main>
 
 <script>
-const SYMBOLS = Array.from({length:12}, (_,i) => {
-  const num = i+1;
-  const src = `./media/${num}.png`;
-  return { id: String(num), src };
-});
-
-const TARGET = atob("MSwyLDMsNA==").split(",");
-
-const HINTS = [
-  "Spesso gli oggetti dei rituali si nascondono nelle stanze più buie.",
-  "Le scope delle streghe nascondono sempre qualcosa.",
-  "Una volta ho sentito la storia di una \"casa del dolore\", forse si parlava di qualcosa di interessante?"
-];
-
-const panel   = document.getElementById('panel');
-const message = document.getElementById('message');
-const hintBox = document.getElementById('hintBox');
-const rituale = document.getElementById('rituale');
-let state = [];
-
-function createSlot(i){
-  const wrap = document.createElement('div');
-  wrap.className = 'slot';
-
-  const left = document.createElement('div');
-  left.className = 'arrow'; left.textContent = '◀';
-
-  const sym = document.createElement('div');
-  sym.className = 'symbol';
-
-  const right = document.createElement('div');
-  right.className = 'arrow'; right.textContent = '▶';
-
-  wrap.appendChild(left); wrap.appendChild(sym); wrap.appendChild(right);
-
-  state[i] = Math.floor(Math.random() * SYMBOLS.length);
-  renderSymbol(sym, state[i]);
-
-  left.addEventListener('click', ()=>{
-    state[i] = (state[i] - 1 + SYMBOLS.length) % SYMBOLS.length;
-    renderSymbol(sym, state[i]); message.textContent = '';
-  });
-  right.addEventListener('click', ()=>{
-    state[i] = (state[i] + 1) % SYMBOLS.length;
-    renderSymbol(sym, state[i]); message.textContent = '';
+document.addEventListener("DOMContentLoaded", () => {
+  const SYMBOLS = Array.from({length:12}, (_,i) => {
+    const num = i+1;
+    return { id:String(num), src:`./media/${num}.png` };
   });
 
-  return wrap;
-}
+  const TARGET = atob("MSwyLDMsNA==").split(","); // "1,2,3,4"
+  const HINTS = [
+    "Spesso gli oggetti dei rituali si nascondono nelle stanze più buie.",
+    "Le scope delle streghe nascondono sempre qualcosa.",
+    "Una volta ho sentito la storia di una \"casa del dolore\", forse si parlava di qualcosa di interessante?"
+  ];
 
-function renderSymbol(el, idx){
-  const {src} = SYMBOLS[idx];
-  el.innerHTML = '';
-  const img = document.createElement('img');
-  img.src = src; img.alt = `simbolo ${idx+1}`;
-  img.onerror = () => {
-    const fb = document.createElement('div');
-    fb.className = 'fallback';
-    fb.textContent = 'MANCANTE: ' + src;
-    el.innerHTML = ''; el.appendChild(fb);
+  const panel   = document.getElementById('panel');
+  const message = document.getElementById('message');
+  const hintBox = document.getElementById('hintBox');
+  const rituale = document.getElementById('rituale');
+  const ritText = document.getElementById('ritText');
+
+  hintBox.textContent = "Suggerimento: " + HINTS[Math.floor(Math.random()*HINTS.length)];
+
+  let state = [];
+
+  function renderSymbol(el, idx){
+    el.innerHTML = '';
+    const img = new Image();
+    img.src = SYMBOLS[idx].src;
+    img.alt = `simbolo ${idx+1}`;
+    img.onerror = ()=>{ el.innerHTML = `<div class="fallback">MANCANTE: ${SYMBOLS[idx].src}</div>`; };
+    el.appendChild(img);
+  }
+
+  function createSlot(i){
+    const wrap = document.createElement('div'); wrap.className='slot';
+    const left=document.createElement('div'); left.className='arrow'; left.textContent='◀';
+    const sym=document.createElement('div'); sym.className='symbol';
+    const right=document.createElement('div'); right.className='arrow'; right.textContent='▶';
+    wrap.append(left,sym,right);
+
+    state[i] = Math.floor(Math.random()*SYMBOLS.length);
+    renderSymbol(sym,state[i]);
+
+    left.addEventListener('click', ()=>{ state[i]=(state[i]-1+SYMBOLS.length)%SYMBOLS.length; renderSymbol(sym,state[i]); message.textContent=''; });
+    right.addEventListener('click',()=>{ state[i]=(state[i]+1)%SYMBOLS.length; renderSymbol(sym,state[i]); message.textContent=''; });
+
+    return wrap;
+  }
+
+  function build(){
+    panel.innerHTML=''; state=[];
+    for(let i=0;i<4;i++) panel.appendChild(createSlot(i));
+  }
+
+  function shuffle(){
+    for(let i=0;i<4;i++) state[i]=Math.floor(Math.random()*SYMBOLS.length);
+    [...panel.children].forEach((slotEl,i)=>renderSymbol(slotEl.querySelector('.symbol'),state[i]));
+    message.textContent='';
+  }
+
+  function check(){
+    const pickedIds = state.map(idx=>SYMBOLS[idx].id);
+    const ok = pickedIds.every((id,i)=>id===TARGET[i]);
+    if(ok){
+      message.className='msg success';
+      message.textContent=''; // niente doppio messaggio
+      ritText.textContent =
+        "Bene, molto bene. Quindi Herr Knock ti ha insegnato molto. Per procedere con il rituale è fondamentale trovare i tre ingredienti per Evocare il Principe delle Tenebre. Credo che tu possa trovarli all'interno del server, ma non sarà facile.";
+      rituale.style.display='block';
+      rituale.scrollIntoView({behavior:'smooth'});
+    }else{
+      message.className='msg fail';
+      message.textContent='sbagliato';
+    }
+  }
+
+  document.getElementById('shuffle').onclick=shuffle;
+  document.getElementById('check').onclick=check;
+  build();
+
+  /* Rituale ingredienti */
+  const answers=[
+    "candela nera",
+    "coltello arrugginito con il simbolo della bestia",
+    "peli pubici di zombie femmina"
+  ];
+  const norm=s=>s.trim().toLowerCase().replace(/\s+/g,' ');
+
+  document.getElementById('completeBtn').onclick=()=>{
+    const v1=norm(document.getElementById('f1').value);
+    const v2=norm(document.getElementById('f2').value);
+    const v3=norm(document.getElementById('f3').value);
+    const ok=(v1===answers[0] && v2===answers[1] && v3===answers[2]);
+    const box=document.getElementById('ritMsg');
+    if(ok){
+      box.className='rit-msg success';
+      box.textContent='Il cerchio si illumina... (la prossima parte si sbloccherà qui)';
+      const ns=document.getElementById('nextStep');
+      ns.style.display='block';
+      ns.innerHTML='<p style="color:var(--accent)">[Prossima fase del rituale — da aggiungere]</p>';
+    }else{
+      box.className='rit-msg fail';
+      box.textContent='La formula non risponde. Forse hai sbagliato gli ingredienti...';
+    }
   };
-  el.appendChild(img);
-}
-
-function build(){
-  panel.innerHTML=''; state = [];
-  for(let i=0;i<4;i++) panel.appendChild(createSlot(i));
-}
-
-function shuffle(){
-  for (let i=0;i<4;i++) state[i] = Math.floor(Math.random()*SYMBOLS.length);
-  [...panel.children].forEach((slotEl, i)=> renderSymbol(slotEl.querySelector('.symbol'), state[i]));
-  message.textContent = '';
-}
-
-function check(){
-  const pickedIds = state.map(idx => SYMBOLS[idx].id);
-  const ok = pickedIds.length === TARGET.length && pickedIds.every((id, i)=> id === TARGET[i]);
-  if(ok){
-    message.className = 'msg success';
-    message.textContent =
-      "Bene, molto bene. Quindi Herr Knock ti ha insegnato molto. Per procedere con il rituale è fondamentale trovare i tre ingredienti per Evocare il Principe delle Tenebre. Credo che tu possa trovarli all'interno del server, ma non sarà facile.";
-    rituale.style.display = 'block';
-    rituale.scrollIntoView({behavior:'smooth', block:'start'});
-  } else {
-    message.className = 'msg fail';
-    message.textContent = 'sbagliato';
-  }
-}
-
-const answers = [
-  "Candela Nera",
-  "Coltello Arrugginito con il Simbolo della Bestia",
-  "Peli Pubici di Zombie Femmina"
-];
-
-function norm(s){
-  return s.trim().toLowerCase().replace(/\s+/g,' ');
-}
-
-document.getElementById('completeBtn').addEventListener('click', ()=>{
-  const v1 = norm(document.getElementById('f1').value);
-  const v2 = norm(document.getElementById('f2').value);
-  const v3 = norm(document.getElementById('f3').value);
-
-  const ok =
-    v1 === norm(answers[0]) &&
-    v2 === norm(answers[1]) &&
-    v3 === norm(answers[2]);
-
-  const box = document.getElementById('ritMsg');
-  if(ok){
-    box.className = 'rit-msg success';
-    box.textContent = 'Il cerchio si illumina... (la prossima parte si sbloccherà qui)';
-    document.getElementById('nextStep').style.display = 'block';
-    document.getElementById('nextStep').innerHTML =
-      '<p style="color:var(--accent);text-shadow:0 0 10px var(--accent)">[Prossima fase del rituale — da aggiungere]</p>';
-  }else{
-    box.className = 'rit-msg fail';
-    box.textContent = 'La formula non risponde. Forse hai sbagliato gli ingredienti...';
-  }
 });
-
-document.getElementById('shuffle').addEventListener('click', shuffle);
-document.getElementById('check').addEventListener('click', check);
-build();
-
-hintBox.textContent = "Suggerimento: " + HINTS[Math.floor(Math.random()*HINTS.length)];
 </script>
 </body>
 </html>
