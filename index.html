@@ -40,14 +40,12 @@
   .footer{margin-top:clamp(12px,2vw,18px);color:var(--accent2);font-size:.95rem}
 
   /* RITUALE */
-  #rituale{display:none;width:100%;max-width:min(1100px,96vw);margin:clamp(16px,2.5vw,24px) auto 0}
+  #rituale{width:100%;max-width:min(1100px,96vw);margin:clamp(16px,2.5vw,24px) auto 0}
   .rituale-text{margin:12px auto 8px;line-height:1.45;color:var(--fg);font-size:clamp(14px,2vw,18px)}
   .rit-title{font-size:clamp(22px,4vw,36px);margin:8px 0 12px;color:var(--accent);text-shadow:0 0 10px var(--accent),0 0 24px var(--accent2);letter-spacing:.08em}
-
   .ritual-wrap{display:flex;align-items:center;justify-content:center;gap:16px;margin-top:8px}
   .rit-gif{width:140px;height:140px;object-fit:cover;border-radius:8px;box-shadow:0 0 16px rgba(43,255,136,.25)}
   @media (max-width:900px){.rit-gif{display:none}}
-
   .pentacolo{position:relative;width:min(90vw,600px);height:min(90vw,600px);margin:0 auto 24px}
   .pentacolo svg{transform:rotate(180deg)}
   .rit-field{position:absolute;transform:translate(-50%,-50%)}
@@ -57,7 +55,6 @@
   .rit-field input{width:100%;padding:10px 12px;border-radius:10px;border:2px solid rgba(43,255,136,.35);background:rgba(10,10,10,.85);color:var(--fg);font-size:clamp(14px,2vw,16px)}
   .rit-btn{position:absolute;left:50%;top:62%;transform:translate(-50%,-50%)}
   .rit-msg{min-height:20px;margin-top:8px;font-size:1rem}
-
   @media (max-width:700px){
     .rf-top   {left:50%; top:106%; width:92%;}
     .rf-mid   {left:50%; top:124%; width:92%;}
@@ -66,7 +63,7 @@
   }
 
   /* GIOCO */
-  #game{display:none;width:100%;max-width:100vw;margin:28px auto 0;text-align:center}
+  #game{width:100%;max-width:100vw;margin:28px auto 0;text-align:center}
   #game h2{margin:8px 0 6px;font-size:clamp(20px,4vw,28px);color:var(--accent);text-shadow:0 0 10px var(--accent)}
   #goal{color:var(--muted); margin-bottom:8px}
   #canvasWrap{
@@ -78,6 +75,7 @@
   }
   #canvasWrap.invert{ filter: invert(1) hue-rotate(180deg); }
   canvas{display:block;width:100%;height:auto;background:#000}
+
   .hud{color:var(--muted);margin-top:8px;font-size:clamp(14px,2vw,16px)}
   .score{color:var(--accent2);margin-left:6px}
   .loading{color:var(--accent2); margin:8px 0}
@@ -163,7 +161,7 @@
   @keyframes bl { from{opacity:1} to{opacity:.35} }
 </style>
 </head>
-<body><h1>diominchiatttt</h1>
+<body><h1>diominchia</h1>
   <main class="page">
     <!-- HERO -->
     <div class="hero" id="heroBox"></div>
@@ -182,7 +180,7 @@
 
     <!-- RITUALE -->
     <section id="rituale">
-      <p class="rituale-text" id="ritText"></p>
+      <p class="rituale-text" id="ritText">Bene, molto bene. Per procedere con il rituale è fondamentale trovare i tre ingredienti…</p>
       <div class="rit-title">Inizia il Rituale</div>
 
       <div class="ritual-wrap">
@@ -213,10 +211,9 @@
         <div id="chargeHud" class="chargeHud"><div id="chargeFill" class="chargeFill"></div></div>
         <div id="livesHud" class="livesHud"></div>
         <div id="overlayMsg" class="overlayMsg"><div class="box" id="overlayBox"></div></div>
-        <!-- Canvas: dimensioni logiche iniziali, poi ridimensionato via JS -->
         <canvas id="runner" width="900" height="300"></canvas>
       </div>
-      <div class="hud">Controlli: <strong>←</strong>/<strong>→</strong> muovi, <strong>SPAZIO</strong> o <strong>↑</strong> salta (tieni premuto <strong>↑</strong> per volo). Punteggio: <span class="score" id="score">0</span></div>
+      <div class="hud">Controlli: <strong>←</strong>/<strong>→</strong> muovi, <strong>SPAZIO</strong> o <strong>↑</strong> salta (tieni <strong>↑</strong> per volo). Punteggio: <span class="score" id="score">0</span></div>
       <div class="loading" id="loadingMsg">Caricamento immagini…</div>
       <div class="cta" style="margin-top:10px"><button id="startGame">Avvia</button> <button id="restartGame" style="display:none">Riprova</button></div>
 
@@ -227,15 +224,15 @@
           <li>🕯️ <strong>Candela</strong>: +50 punti.</li>
           <li>❤️ <strong>Cuore</strong>: recupera 1 vita (max 3).</li>
           <li>🐞 <strong>Insetto</strong>: comandi invertiti per 5 secondi.</li>
-          <li><strong>Volo</strong>: tieni premuto <strong>↑</strong> mentre sei in aria per restare sospeso; l’energia si consuma e si <em>ricarica lentamente</em> quando non voli.</li>
-          <li>Salto direzionale: <strong>→ + salto</strong> = più lungo e basso; <strong>← + salto</strong> = corto e all’indietro.</li>
+          <li><strong>Volo</strong>: tieni premuto <strong>↑</strong> in aria per rimanere sospeso; l’energia scende e si ricarica lentamente a terra.</li>
+          <li>Salto direzionale: <strong>→ + salto</strong> = lungo & basso; <strong>← + salto</strong> = corto & all’indietro.</li>
           <li>Dopo i 300 punti la velocità aumenta ulteriormente; dopo i 500 compaiono disturbi casuali (shake o inversione colori).</li>
           <li>(Debug) Epilogo sbloccato a <strong>10</strong> punti in una singola partita.</li>
         </ul>
       </div>
     </section>
 
-    <!-- EPILOGO (solo dopo clear) -->
+    <!-- EPILOGO -->
     <section class="lore" id="epilogue">
       <h3>Il Sussurro del Pentacolo</h3>
       <p>Hai composto i simboli proibiti, tracciato il rituale e posizionato il pugnale. La candela nera illumina il centro del pentacolo e dopo aver bruciato i peli pubici della zombie rossa sei sopravvissuto agli incubi di guardia: una voce, profonda e demoniaca ti riconosce.</p>
@@ -250,13 +247,17 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', () => {
+  /* ====== DEBUG: mostra il gioco subito ====== */
+  const DEBUG_SHOW_GAME = true;   // metti false per nasconderlo finché non completi il rituale
+  const TARGET_SCORE = 10;        // DEBUG (rimetti 666 quando hai finito)
+
   /* HERO con fallback */
   const hero = document.getElementById('heroBox');
   const b = new Image(); b.src='media/home.png?v=1'; b.alt='Il Rituale';
   b.onload=()=>hero.appendChild(b);
   b.onerror=()=>{const fb=document.createElement('div');fb.className='hero-fallback';fb.textContent='MANCANTE: media/home.png';hero.appendChild(fb);};
 
-  /* SIMBOLI */
+  /* SIMBOLI (restano, ma non bloccano il gioco in debug) */
   const SYMBOLS = Array.from({length:12},(_,i)=>({id:String(i+1),src:`./media/${i+1}.png?v=1`}));
   const TARGET = atob("MSwyLDMsNA==").split(","); // "1,2,3,4"
   const HINTS=[
@@ -267,11 +268,11 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('hintBox').textContent="Suggerimento: "+HINTS[Math.floor(Math.random()*HINTS.length)];
 
   const panel=document.getElementById('panel'), message=document.getElementById('message'),
-        rituale=document.getElementById('rituale'), ritText=document.getElementById('ritText'),
+        rituale=document.getElementById('rituale'),
         gameSec=document.getElementById('game'),
         epilogue=document.getElementById('epilogue');
 
-  let state=[], ritualeShown=false;
+  let state=[];
 
   function renderSymbol(el,idx){
     el.innerHTML=''; const img=new Image(); img.src=SYMBOLS[idx].src; img.alt=`simbolo ${idx+1}`;
@@ -294,54 +295,17 @@ document.addEventListener('DOMContentLoaded', () => {
   function check(){
     const picked=state.map(idx=>SYMBOLS[idx].id);
     const ok=picked.length===TARGET.length && picked.every((id,i)=>id===TARGET[i]);
-    if(ok){
-      message.className='msg success'; message.textContent='';
-      if(!ritualeShown){
-        ritText.textContent="Bene, molto bene. Quindi Herr Knock ti ha insegnato molto. Per procedere con il rituale è fondamentale trovare i tre ingredienti per Evocare il Principe delle Tenebre. Credo che tu possa trovarli all'interno del server, ma non sarà facile.";
-        rituale.style.display='block'; rituale.scrollIntoView({behavior:'smooth'}); ritualeShown=true;
-      }
-    } else { message.className='msg fail'; message.textContent='sbagliato'; }
+    message.className= ok ? 'msg success' : 'msg fail';
+    message.textContent= ok ? 'Perfetto.' : 'Sbagliato.';
   }
   document.getElementById('shuffle').onclick=shuffle;
   document.getElementById('check').onclick=check;
   build();
 
-  /* ===== RITUALE — ordine libero ===== */
-  const norm=(s)=>s.normalize('NFD').replace(/\p{Diacritic}/gu,'').toLowerCase().replace(/[^\p{L}\p{N}\s]/gu,'').replace(/\s+/g,' ').trim();
-  function classify(text){
-    const v=norm(text); if(!v) return null;
-    const has=(...ws)=>ws.every(w=>v.includes(w));
-    if(v.includes('candela') && (v.includes('nera')||v.includes('nero'))) return 'CANDLE';
-    const rust=v.includes('arrugginito')||v.includes('arrugginita')||v.includes('ossidato')||v.includes('ossidata')||v.includes('ruggine');
-    if(v.includes('coltello') && rust && has('simbolo','bestia')) return 'KNIFE';
-    const peli=v.includes('peli')||v.includes('pelo'); const pub=v.includes('pubici')||v.includes('pubico');
-    const fem=v.includes('femmina')||v.includes('donna');
-    if(peli && pub && v.includes('zombie') && fem) return 'HAIR';
-    return null;
-  }
-  function submitRitual(){
-    const types=[classify(f1.value), classify(f2.value), classify(f3.value)];
-    const set=new Set(types.filter(Boolean));
-    const ok=set.has('CANDLE') && set.has('KNIFE') && set.has('HAIR') && types.every(t=>t!==null);
-    const box=document.getElementById('ritMsg');
-    if(ok){
-      box.className='rit-msg success';
-      box.textContent='Il cerchio si illumina… il portale si apre!';
-      gameSec.style.display='block'; gameSec.scrollIntoView({behavior:'smooth'});
-    }else{
-      box.className='rit-msg fail';
-      box.textContent='La formula non risponde. Forse hai sbagliato gli ingredienti...';
-    }
-  }
-  const f1=document.getElementById('f1'), f2=document.getElementById('f2'), f3=document.getElementById('f3');
-  document.getElementById('completeBtn').onclick=submitRitual;
-  ;[f1,f2,f3].forEach(el=>el.addEventListener('keydown',e=>{ if(e.key==='Enter') submitRitual(); e.stopPropagation(); }));
-
   /* =========================
      MINIGIOCO — Pumpkin Runner (Responsive)
      ========================= */
-  // Dimensioni logiche base (non cambiano): manteniamo 3:1
-  const BASE_W = 900, BASE_H = 300;
+  const BASE_W = 900, BASE_H = 300; // logiche
 
   // Canvas & UI
   const cvs = document.getElementById('runner'), ctx = cvs.getContext('2d');
@@ -354,7 +318,6 @@ document.addEventListener('DOMContentLoaded', () => {
         restartBtn = document.getElementById('restartGame'),
         loadingMsg = document.getElementById('loadingMsg');
   const wrap = document.getElementById('canvasWrap');
-  const epilogue=document.getElementById('epilogue');
 
   // Immagini
   const playerImg = new Image(); playerImg.src = 'media/zucca.png?v=1';
@@ -372,13 +335,13 @@ document.addEventListener('DOMContentLoaded', () => {
     })));
   }
 
-  /* ---------- Stato/Costanti dipendenti da scala ---------- */
-  let SCALE = 1;              // impostata da resize
+  /* ---------- Stato dipendente da scala ---------- */
+  let SCALE = 1;
   let running=false, gameOver=false, score=0, lastSpawn=0, lastTs=null;
   let cleared=false;
 
   // Velocità (curve)
-  let speed = 0.8; // verrà scalata
+  let speed = 0.8;
   let MAX_SPEED_BASE = 4.2;
   const SPEED_MULT_BASE = 1.10;
   const EXTRA_AFTER_300 = 1.30;
@@ -405,7 +368,7 @@ document.addEventListener('DOMContentLoaded', () => {
   let BASE_JUMP_VY = -11.0;
   let SHORT_CUT_VY = -3.0;
   const COYOTE_TIME = 0.14;
-  const JUMP_BUFFER = 0.16;
+  let JUMP_BUFFER = 0.16;
 
   let MOVE_ACCEL = 0.20;
   let MOVE_ACCEL_AIR = 0.12;
@@ -422,8 +385,7 @@ document.addEventListener('DOMContentLoaded', () => {
   let FLIGHT_MIN_Y = 0;
 
   function updateChargeBar(){
-    const pct = Math.round((flightEnergy / MAX_FLIGHT_ENERGY)*100);
-    chargeFill.style.width = Math.max(0, Math.min(100, pct)) + '%';
+    chargeFill.style.width = Math.round((flightEnergy / MAX_FLIGHT_ENERGY)*100) + '%';
   }
 
   // Effetti
@@ -431,46 +393,36 @@ document.addEventListener('DOMContentLoaded', () => {
   let effectTimer = 0, nextEffectAt = 10;
   let invertFilterTime = 0;
   let controlsInvertUntil = 0;
-  function controlsInverted(){ return performance.now()/1000 < controlsInvertUntil; }
+  const controlsInverted = ()=> performance.now()/1000 < controlsInvertUntil;
 
-  /* ---------- Target di debug ---------- */
-  const TARGET_SCORE = 10; // <— DEBUG (rimetti 666 quando vuoi)
-
-  /* ---------- Resize & Scala ---------- */
+  /* ---------- Responsive ---------- */
   function calcBestScale(){
     const vw = window.innerWidth;
     const vh = window.innerHeight;
-    const targetW = Math.max(600, Math.floor(vw * 0.98)); // quasi tutta la larghezza
-    // mantieni 3:1, ma non superare ~60% dell'altezza viewport
+    const targetW = Math.max(600, Math.floor(vw * 0.98));
     const maxH = Math.floor(vh * 0.6);
     let s = targetW / BASE_W;
     let h = BASE_H * s;
     if(h > maxH){ s = maxH / BASE_H; }
-    // limiti sensati
     s = Math.max(0.8, Math.min(s, 3.0));
     return s;
   }
-
-  function scaleValue(v, ratio){ return v * ratio; }
+  const scaleValue = (v, r)=> v * r;
 
   function applyScale(newScale, keepPositions=true){
     const ratio = newScale / SCALE;
     SCALE = newScale;
 
-    // ridimensiona il canvas interno per nitidezza; lo stile width:100% gestisce il rendering responsive
     cvs.width = Math.round(BASE_W * SCALE);
     cvs.height = Math.round(BASE_H * SCALE);
 
-    // lanes
     ground = cvs.height - Math.round(40 * SCALE);
     airLaneY = ground - Math.round(150 * SCALE);
     midLaneY = Math.round((ground + airLaneY)/2);
 
-    // velocità target
     MAX_SPEED_BASE = 4.2 * SCALE;
     speed = keepPositions ? speed * ratio : (0.8 * SCALE);
 
-    // fisica
     GRAVITY = 0.52 * SCALE;
     BASE_JUMP_VY = -11.0 * SCALE;
     SHORT_CUT_VY = -3.0 * SCALE;
@@ -482,7 +434,6 @@ document.addEventListener('DOMContentLoaded', () => {
     FLIGHT_CLIMB_CAP = -4.2 * SCALE;
     FLIGHT_MIN_Y = (airLaneY - (10 * SCALE)) - (44 * SCALE);
 
-    // player
     if(keepPositions){
       player.x = scaleValue(player.x, ratio);
       player.y = scaleValue(player.y, ratio);
@@ -490,16 +441,6 @@ document.addEventListener('DOMContentLoaded', () => {
       player.h = scaleValue(player.h, ratio);
       player.vx = scaleValue(player.vx, ratio);
       player.vy = scaleValue(player.vy, ratio);
-    } else {
-      player.x = 120 * SCALE;
-      player.w = 44 * SCALE;
-      player.h = 44 * SCALE;
-      player.y = ground - player.h;
-      player.vx = 0; player.vy = 0; player.onGround = true;
-    }
-
-    // ostacoli/pickup
-    if(keepPositions){
       obstacles.forEach(o=>{
         o.x = scaleValue(o.x, ratio);
         o.y = scaleValue(o.y, ratio);
@@ -515,15 +456,13 @@ document.addEventListener('DOMContentLoaded', () => {
         p.w = scaleValue(p.w, ratio);
         p.h = scaleValue(p.h, ratio);
       });
+    } else {
+      player.x = 120 * SCALE;
+      player.w = 44 * SCALE; player.h = 44 * SCALE;
+      player.y = ground - player.h; player.vx = 0; player.vy = 0; player.onGround = true;
     }
   }
-
-  function handleResize(){
-    const s = calcBestScale();
-    applyScale(s, true);
-  }
-
-  window.addEventListener('resize', handleResize);
+  window.addEventListener('resize', ()=>applyScale(calcBestScale(), true));
 
   /* ---------- Disturbi ---------- */
   function maybeScheduleEffect(dt){
@@ -531,17 +470,15 @@ document.addEventListener('DOMContentLoaded', () => {
     effectTimer += dt;
     if(effectTimer >= nextEffectAt){
       effectTimer = 0;
-      nextEffectAt = 8 + Math.random()*6; // media ~10s
-      if(Math.random() < 0.5){
-        shakeTime = 1.6;
-      } else {
-        invertFilterTime = 2.4;
-        wrap.classList.add('invert');
-      }
+      nextEffectAt = 8 + Math.random()*6;
+      if(Math.random() < 0.5){ shakeTime = 1.6; }
+      else { invertFilterTime = 2.4; wrap.classList.add('invert'); }
     }
   }
 
   /* ---------- Spawn ---------- */
+  const monsterImgs = [...monsterImgs]; // già sopra
+
   function drawImage(img, x,y,w,h){ if(img && img.complete && img.naturalWidth) ctx.drawImage(img,x,y,w,h); }
 
   function spawnObstacleNow(type, scale=1){
@@ -553,14 +490,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
     let y;
     if(type==='ground'){
-      const jitterY = (Math.random()*6 - 3) * SCALE;
-      y = ground - h + jitterY;
+      y = ground - h + (Math.random()*6 - 3) * SCALE;
     } else if(type==='air'){
-      const jitterY = (Math.random()*12 - 6) * SCALE;
-      y = airLaneY - h/2 + jitterY;
-    } else { // mid
-      const jitterY = (Math.random()*10 - 5) * SCALE;
-      y = midLaneY - h/2 + jitterY;
+      y = airLaneY - h/2 + (Math.random()*12 - 6) * SCALE;
+    } else {
+      y = midLaneY - h/2 + (Math.random()*10 - 5) * SCALE;
     }
 
     obstacles.push({
@@ -579,7 +513,6 @@ document.addEventListener('DOMContentLoaded', () => {
     if(currentScore > 600){ minC=4; maxC=4; }
     else if(currentScore > 400){ minC=3; maxC=3; }
 
-    // Pesi corsie (più in basso)
     let weights = {ground:0.62, mid:0.23, air:0.15};
     if(currentScore > 400) weights = {ground:0.58, mid:0.27, air:0.15};
     if(currentScore > 600) weights = {ground:0.55, mid:0.30, air:0.15};
@@ -594,10 +527,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     let types=[];
     for(let i=0;i<count;i++) types.push(pickLane());
-
-    // Garantisci almeno un ground
     if(!types.includes('ground')) types[0] = 'ground';
-
     shuffleArray(types);
 
     const BASE_GAP = (0.22 + Math.random()*0.1);
@@ -647,7 +577,7 @@ document.addEventListener('DOMContentLoaded', () => {
     livesHud.innerHTML='';
     for(let i=0;i<MAX_LIVES;i++){
       const im = document.createElement('img');
-      im.src = heartImgSrc;
+      im.src = 'media/heart.png';
       if(i >= lives){ im.style.filter='grayscale(1) brightness(0.7)'; im.style.opacity='0.5'; }
       livesHud.appendChild(im);
     }
@@ -664,7 +594,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     flightEnergy = MAX_FLIGHT_ENERGY; updateChargeBar();
 
-    // ricomputa scala e fisica in base alla finestra attuale
     applyScale(calcBestScale(), false);
 
     scoreHudEl.textContent='0'; scoreEl.textContent='0';
@@ -672,7 +601,7 @@ document.addEventListener('DOMContentLoaded', () => {
     cvs.classList.remove('blink');
 
     epilogue.style.display='none';
-    document.getElementById('sacrificeBlock').style.display='none';
+    document.getElementById('sacrificeBlock')?.style && (document.getElementById('sacrificeBlock').style.display='none');
   }
 
   function endGame(){
@@ -708,7 +637,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if(bgImg && bgImg.complete && bgImg.naturalWidth){
       const bw = bgImg.naturalWidth, bh = bgImg.naturalHeight;
       const scale = cvs.height / bh, drawW = bw * scale;
-      bgOffset = (bgOffset - (speed * 0.42)) % drawW; // proporzionato
+      bgOffset = (bgOffset - (speed * 0.42)) % drawW;
       if(bgOffset < -drawW) bgOffset += drawW;
       for(let x=bgOffset; x < cvs.width + drawW; x += drawW){
         ctx.drawImage(bgImg, 0, 0, bw, bh, Math.floor(x), 0, Math.ceil(drawW), cvs.height);
@@ -726,7 +655,7 @@ document.addEventListener('DOMContentLoaded', () => {
     timeSec += delta;
     elapsedRunTime += delta;
 
-    // target speed con rampa
+    // velocità con rampa
     const t = Math.min(1, elapsedRunTime / ACCEL_RAMP_TIME);
     const eased = t*t*(3 - 2*t);
     const baseTarget = (0.8 * SCALE) + ((4.2 * SCALE) - (0.8 * SCALE)) * eased;
@@ -764,21 +693,21 @@ document.addEventListener('DOMContentLoaded', () => {
     ctx.beginPath(); ctx.moveTo(0,airLaneY+0.5); ctx.lineTo(cvs.width,airLaneY+0.5); ctx.stroke();
     ctx.setLineDash([]);
 
-    // spawn
+    // spawn (con pickup)
     const baseInterval = 2400 - (speed/SCALE)*90;
     const jitter = 900 * Math.random();
     const interval = Math.max(1400, baseInterval + jitter);
 
     if(ts - lastSpawn > interval){
       lastSpawn = ts;
-      if(!cleared && Math.random() < PICKUP_CHANCE){
+      if(!cleared && Math.random() < 0.20){
         if(!spawnPickup()){ queuePattern(score); }
       } else {
         queuePattern(score);
       }
     }
 
-    // esegui coda spawn sfalsata
+    // esegui coda
     for(let i=spawnQueue.length-1;i>=0;i--){
       spawnQueue[i].delay -= delta;
       if(spawnQueue[i].delay <= 0){
@@ -804,7 +733,7 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     }
 
-    // ostacoli (con oscillazioni dopo 300)
+    // ostacoli
     for(let i=obstacles.length-1;i>=0;i--){
       const o=obstacles[i];
       o.baseX -= speed;
@@ -812,13 +741,9 @@ document.addEventListener('DOMContentLoaded', () => {
       let drawY = o.baseY;
       if(score >= 300){
         const phase = (timeSec + o.oscP) * (2*Math.PI / o.oscT);
-        if(o.type === 'air'){
-          drawY = o.baseY + Math.sin(phase) * o.oscA;
-        } else if(o.type === 'ground'){
-          drawX = o.baseX + Math.sin(phase) * (o.oscA*0.8);
-        } else { // mid
-          drawY = o.baseY + Math.sin(phase) * (o.oscA*0.6);
-        }
+        if(o.type === 'air')      drawY = o.baseY + Math.sin(phase) * o.oscA;
+        else if(o.type === 'ground') drawX = o.baseX + Math.sin(phase) * (o.oscA*0.8);
+        else                      drawY = o.baseY + Math.sin(phase) * (o.oscA*0.6);
       }
       o.x = drawX; o.y = drawY;
 
@@ -833,12 +758,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
     /* --- Fisica player --- */
     const invert = controlsInverted();
-    const leftActive = invert ? rightHeld : leftHeld;
-    const rightActive = invert ? leftHeld : rightHeld;
+    const leftHeld = keys.left, rightHeld = keys.right;
 
     const accel = player.onGround ? MOVE_ACCEL : MOVE_ACCEL_AIR;
-    if(leftActive && !rightActive)  player.vx -= accel;
-    else if(rightActive && !leftActive) player.vx += accel;
+    if((invert?rightHeld:leftHeld) && !(invert?leftHeld:rightHeld))  player.vx -= accel;
+    else if((invert?leftHeld:rightHeld) && !(invert?rightHeld:leftHeld)) player.vx += accel;
     else player.vx *= FRICTION;
     player.vx = Math.max(-MAX_VX, Math.min(MAX_VX, player.vx));
 
@@ -851,7 +775,7 @@ document.addEventListener('DOMContentLoaded', () => {
     player.vy += GRAVITY;
 
     // volo
-    if(upHeld && !player.onGround && flightEnergy > 0){
+    if(keys.up && !player.onGround && flightEnergy > 0){
       player.vy -= FLIGHT_BOOST;
       if(player.vy < FLIGHT_CLIMB_CAP) player.vy = FLIGHT_CLIMB_CAP;
       flightEnergy = Math.max(0, flightEnergy - FLIGHT_DRAIN * delta);
@@ -881,10 +805,10 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // salto variabile
-    if(!jumpHeld && player.vy < SHORT_CUT_VY){ player.vy = SHORT_CUT_VY; }
+    if(!keys.jumpHeld && player.vy < SHORT_CUT_VY){ player.vy = SHORT_CUT_VY; }
 
     // timers
-    jumpBufferTimer -= delta;
+    JUMP_BUFFER -= delta;
     invuln -= delta;
     if(invuln <= 0){ invuln = 0; cvs.classList.remove('blink'); }
 
@@ -898,14 +822,16 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   /* ---------- Input ---------- */
-  let jumpHeld=false, leftHeld=false, rightHeld=false;
-  function requestJump(){ jumpBufferTimer = 0.16; }
+  const keys = { left:false, right:false, up:false, jumpHeld:false };
+
+  function requestJump(){ JUMP_BUFFER = 0.16; }
+
   function doDirectionalJump(){
     let vy = BASE_JUMP_VY;
     let impulseX = 0;
     const invert = controlsInverted();
-    const leftActive = invert ? rightHeld : leftHeld;
-    const rightActive = invert ? leftHeld : rightHeld;
+    const leftActive = invert ? keys.right : keys.left;
+    const rightActive = invert ? keys.left : keys.right;
 
     if(rightActive && !leftActive){ vy = BASE_JUMP_VY * 1.05; impulseX = 2.8 * SCALE; }
     else if(leftActive && !rightActive){ vy = BASE_JUMP_VY * 0.62; impulseX = -2.1 * SCALE; }
@@ -913,44 +839,44 @@ document.addEventListener('DOMContentLoaded', () => {
     player.vy = vy;
     player.vx = Math.max(-MAX_VX, Math.min(MAX_VX, player.vx + impulseX));
     player.onGround = false;
-    coyoteTimer = 0; jumpBufferTimer = 0;
+    JUMP_BUFFER = 0;
   }
   function tryPerformJump(){
-    if ((coyoteTimer > 0 || player.onGround) && jumpBufferTimer > 0) doDirectionalJump();
+    if ((coyoteTimer > 0 || player.onGround) && JUMP_BUFFER > 0) doDirectionalJump();
   }
 
   window.addEventListener('keydown', async (e)=>{
     const tag=document.activeElement && document.activeElement.tagName;
     if(tag==='INPUT' || tag==='TEXTAREA') return;
 
-    if(e.code==='ArrowLeft'){ leftHeld = true; }
-    if(e.code==='ArrowRight'){ rightHeld = true; }
-    if(e.code==='ArrowUp'){ upHeld = true; }
+    if(e.code==='ArrowLeft'){ keys.left = true; }
+    if(e.code==='ArrowRight'){ keys.right = true; }
+    if(e.code==='ArrowUp'){ keys.up = true; }
 
     if(e.code==='Space' || e.code==='ArrowUp'){
       e.preventDefault();
       if(gameOver){ resetGame(); await startGame(); return; }
-      jumpHeld = true;
+      keys.jumpHeld = true;
       if(!running){ await startGame(); requestJump(); }
       else { requestJump(); tryPerformJump(); }
     }
   });
   window.addEventListener('keyup', (e)=>{
-    if(e.code==='ArrowLeft'){ leftHeld = false; }
-    if(e.code==='ArrowRight'){ rightHeld = false; }
-    if(e.code==='ArrowUp'){ upHeld = false; jumpHeld = false; }
-    if(e.code==='Space'){ jumpHeld = false; }
+    if(e.code==='ArrowLeft'){ keys.left = false; }
+    if(e.code==='ArrowRight'){ keys.right = false; }
+    if(e.code==='ArrowUp'){ keys.up = false; keys.jumpHeld = false; }
+    if(e.code==='Space'){ keys.jumpHeld = false; }
   });
 
   // Touch/click
-  document.getElementById('runner').addEventListener('pointerdown', ()=>{
+  cvs.addEventListener('pointerdown', ()=>{
     if(gameOver){ resetGame(); startGame(); return; }
     if(!running){ startGame(); requestJump(); }
-    else { jumpHeld = true; upHeld = true; requestJump(); tryPerformJump(); }
+    else { keys.jumpHeld = true; keys.up = true; requestJump(); tryPerformJump(); }
   });
-  document.getElementById('runner').addEventListener('pointerup', ()=>{ jumpHeld=false; upHeld=false; });
+  cvs.addEventListener('pointerup', ()=>{ keys.jumpHeld=false; keys.up=false; });
 
-  /* ---------- AVVIO ---------- */
+  /* ---------- Avvio ---------- */
   async function startGame(){
     loadingMsg.style.display='block';
     await preload([playerImg, bgImg, ...monsterImgs]);
@@ -963,15 +889,17 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('restartGame').onclick = ()=>{ resetGame(); startGame(); };
 
   // Epilogo: mostra la parte del sacrificio al click
-  document.getElementById('obeyBtn').addEventListener('click', ()=>{
+  document.getElementById('obeyBtn')?.addEventListener('click', ()=>{
     document.getElementById('sacrificeBlock').style.display='block';
   });
 
-  // Prima inizializzazione responsive e reset
+  // Inizializzazione responsive e reset
   applyScale(calcBestScale(), false);
   renderLives(); updateChargeBar();
   epilogue.style.display='none';
-  // Mostra la sezione gioco quando completi il rituale; qui è nascosto finché non passi la combinazione.
+
+  // Mostra il gioco subito se in debug
+  if(DEBUG_SHOW_GAME){ gameSec.style.display='block'; }
 });
 </script>
 </body>
