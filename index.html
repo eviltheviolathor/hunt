@@ -40,7 +40,7 @@
   .footer{margin-top:clamp(12px,2vw,18px);color:var(--accent2);font-size:.95rem}
 
   /* RITUALE */
-  #rituale{width:100%;max-width:min(1100px,96vw);margin:clamp(16px,2.5vw,24px) auto 0}
+  #rituale{display:block;width:100%;max-width:min(1100px,96vw);margin:clamp(16px,2.5vw,24px) auto 0}
   .rituale-text{margin:12px auto 8px;line-height:1.45;color:var(--fg);font-size:clamp(14px,2vw,18px)}
   .rit-title{font-size:clamp(22px,4vw,36px);margin:8px 0 12px;color:var(--accent);text-shadow:0 0 10px var(--accent),0 0 24px var(--accent2);letter-spacing:.08em}
   .ritual-wrap{display:flex;align-items:center;justify-content:center;gap:16px;margin-top:8px}
@@ -63,15 +63,14 @@
   }
 
   /* GIOCO */
-  #game{width:100%;max-width:100vw;margin:28px auto 0;text-align:center}
+  #game{display:none;width:100%;max-width:100vw;margin:28px auto 0;text-align:center}
   #game h2{margin:8px 0 6px;font-size:clamp(20px,4vw,28px);color:var(--accent);text-shadow:0 0 10px var(--accent)}
   #goal{color:var(--muted); margin-bottom:8px}
   #canvasWrap{
     width:100%;
     background:#000;border:2px solid rgba(43,255,136,.3);border-radius:10px;padding:8px;
     position:relative; transition:filter .2s ease;
-    margin:0 auto;
-    max-width:100vw;
+    margin:0 auto; max-width:100vw;
   }
   #canvasWrap.invert{ filter: invert(1) hue-rotate(180deg); }
   canvas{display:block;width:100%;height:auto;background:#000}
@@ -180,7 +179,7 @@
 
     <!-- RITUALE -->
     <section id="rituale">
-      <p class="rituale-text" id="ritText">Bene, molto bene. Per procedere con il rituale è fondamentale trovare i tre ingredienti…</p>
+      <p class="rituale-text" id="ritText"></p>
       <div class="rit-title">Inizia il Rituale</div>
 
       <div class="ritual-wrap">
@@ -247,9 +246,8 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', () => {
-  /* ====== DEBUG: mostra il gioco subito ====== */
-  const DEBUG_SHOW_GAME = true;   // metti false per nasconderlo finché non completi il rituale
-  const TARGET_SCORE = 10;        // DEBUG (rimetti 666 quando hai finito)
+  /* ====== Parametri chiave ====== */
+  const TARGET_SCORE = 10; // DEBUG — cambia a 666 quando vuoi
 
   /* HERO con fallback */
   const hero = document.getElementById('heroBox');
@@ -257,7 +255,7 @@ document.addEventListener('DOMContentLoaded', () => {
   b.onload=()=>hero.appendChild(b);
   b.onerror=()=>{const fb=document.createElement('div');fb.className='hero-fallback';fb.textContent='MANCANTE: media/home.png';hero.appendChild(fb);};
 
-  /* SIMBOLI (restano, ma non bloccano il gioco in debug) */
+  /* SIMBOLI */
   const SYMBOLS = Array.from({length:12},(_,i)=>({id:String(i+1),src:`./media/${i+1}.png?v=1`}));
   const TARGET = atob("MSwyLDMsNA==").split(","); // "1,2,3,4"
   const HINTS=[
@@ -268,11 +266,10 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('hintBox').textContent="Suggerimento: "+HINTS[Math.floor(Math.random()*HINTS.length)];
 
   const panel=document.getElementById('panel'), message=document.getElementById('message'),
-        rituale=document.getElementById('rituale'),
-        gameSec=document.getElementById('game'),
-        epilogue=document.getElementById('epilogue');
+        rituale=document.getElementById('rituale'), ritText=document.getElementById('ritText'),
+        gameSec=document.getElementById('game'), epilogue=document.getElementById('epilogue');
 
-  let state=[];
+  let state=[], ritualeShown=false;
 
   function renderSymbol(el,idx){
     el.innerHTML=''; const img=new Image(); img.src=SYMBOLS[idx].src; img.alt=`simbolo ${idx+1}`;
@@ -295,8 +292,15 @@ document.addEventListener('DOMContentLoaded', () => {
   function check(){
     const picked=state.map(idx=>SYMBOLS[idx].id);
     const ok=picked.length===TARGET.length && picked.every((id,i)=>id===TARGET[i]);
-    message.className= ok ? 'msg success' : 'msg fail';
-    message.textContent= ok ? 'Perfetto.' : 'Sbagliato.';
+    if(ok){
+      message.className='msg success'; message.textContent='';
+      if(!ritualeShown){
+        ritText.textContent="Bene, molto bene. Quindi Herr Knock ti ha insegnato molto. Per procedere con il rituale è fondamentale trovare i tre ingredienti per Evocare il Principe delle Tenebre. Credo che tu possa trovarli all'interno del server, ma non sarà facile.";
+        ritualeShown=true;
+        gameSec.style.display='block'; // sblocca il gioco solo ora
+        gameSec.scrollIntoView({behavior:'smooth'});
+      }
+    } else { message.className='msg fail'; message.textContent='sbagliato'; }
   }
   document.getElementById('shuffle').onclick=shuffle;
   document.getElementById('check').onclick=check;
@@ -305,7 +309,7 @@ document.addEventListener('DOMContentLoaded', () => {
   /* =========================
      MINIGIOCO — Pumpkin Runner (Responsive)
      ========================= */
-  const BASE_W = 900, BASE_H = 300; // logiche
+  const BASE_W = 900, BASE_H = 300; // dimensioni logiche di riferimento
 
   // Canvas & UI
   const cvs = document.getElementById('runner'), ctx = cvs.getContext('2d');
@@ -335,12 +339,12 @@ document.addEventListener('DOMContentLoaded', () => {
     })));
   }
 
-  /* ---------- Stato dipendente da scala ---------- */
+  /* ---------- Stato / costanti che scalano ---------- */
   let SCALE = 1;
   let running=false, gameOver=false, score=0, lastSpawn=0, lastTs=null;
   let cleared=false;
 
-  // Velocità (curve)
+  // Velocità (curva progressiva)
   let speed = 0.8;
   let MAX_SPEED_BASE = 4.2;
   const SPEED_MULT_BASE = 1.10;
@@ -368,20 +372,20 @@ document.addEventListener('DOMContentLoaded', () => {
   let BASE_JUMP_VY = -11.0;
   let SHORT_CUT_VY = -3.0;
   const COYOTE_TIME = 0.14;
-  let JUMP_BUFFER = 0.16;
+  const JUMP_BUFFER = 0.16;
+  let coyoteTimer = 0, jumpBufferTimer = 0;
 
   let MOVE_ACCEL = 0.20;
   let MOVE_ACCEL_AIR = 0.12;
   let MAX_VX = 3.0;
   const FRICTION = 0.86;
 
-  let upHeld = false;
-  const MAX_FLIGHT_ENERGY = 0.5;
-  let flightEnergy = MAX_FLIGHT_ENERGY;
-  let FLIGHT_DRAIN = 0.6;
-  let FLIGHT_RECHARGE = 0.06;
   let FLIGHT_BOOST = 0.70;
   let FLIGHT_CLIMB_CAP = -4.2;
+  const MAX_FLIGHT_ENERGY = 0.5;
+  let FLIGHT_DRAIN = 0.6;
+  let FLIGHT_RECHARGE = 0.06;
+  let flightEnergy = MAX_FLIGHT_ENERGY;
   let FLIGHT_MIN_Y = 0;
 
   function updateChargeBar(){
@@ -395,7 +399,7 @@ document.addEventListener('DOMContentLoaded', () => {
   let controlsInvertUntil = 0;
   const controlsInverted = ()=> performance.now()/1000 < controlsInvertUntil;
 
-  /* ---------- Responsive ---------- */
+  /* ---------- Responsive scaling ---------- */
   function calcBestScale(){
     const vw = window.innerWidth;
     const vh = window.innerHeight;
@@ -477,8 +481,6 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   /* ---------- Spawn ---------- */
-  const monsterImgs = [...monsterImgs]; // già sopra
-
   function drawImage(img, x,y,w,h){ if(img && img.complete && img.naturalWidth) ctx.drawImage(img,x,y,w,h); }
 
   function spawnObstacleNow(type, scale=1){
@@ -577,7 +579,7 @@ document.addEventListener('DOMContentLoaded', () => {
     livesHud.innerHTML='';
     for(let i=0;i<MAX_LIVES;i++){
       const im = document.createElement('img');
-      im.src = 'media/heart.png';
+      im.src = heartImgSrc;
       if(i >= lives){ im.style.filter='grayscale(1) brightness(0.7)'; im.style.opacity='0.5'; }
       livesHud.appendChild(im);
     }
@@ -601,7 +603,7 @@ document.addEventListener('DOMContentLoaded', () => {
     cvs.classList.remove('blink');
 
     epilogue.style.display='none';
-    document.getElementById('sacrificeBlock')?.style && (document.getElementById('sacrificeBlock').style.display='none');
+    const sb=document.getElementById('sacrificeBlock'); if(sb) sb.style.display='none';
   }
 
   function endGame(){
@@ -610,14 +612,14 @@ document.addEventListener('DOMContentLoaded', () => {
     const finalScore = Math.floor(score);
     if(cleared){
       overlayBox.style.color = 'var(--ok)';
-      overlayBox.textContent = String(finalScore);
+      overlayBox.textContent = String(finalScore); // punteggio come da richiesta
       epilogue.style.display = 'block';
     } else {
       overlayBox.style.color = 'var(--err)';
       overlayBox.textContent = 'Ritenta quante volte vuoi, tanto non ci riuscirai mai!';
       epilogue.style.display = 'none';
     }
-    document.getElementById('restartGame').style.display='inline-block';
+    restartBtn.style.display='inline-block';
     cvs.classList.remove('blink');
   }
 
@@ -693,21 +695,21 @@ document.addEventListener('DOMContentLoaded', () => {
     ctx.beginPath(); ctx.moveTo(0,airLaneY+0.5); ctx.lineTo(cvs.width,airLaneY+0.5); ctx.stroke();
     ctx.setLineDash([]);
 
-    // spawn (con pickup)
+    // spawn
     const baseInterval = 2400 - (speed/SCALE)*90;
     const jitter = 900 * Math.random();
     const interval = Math.max(1400, baseInterval + jitter);
 
     if(ts - lastSpawn > interval){
       lastSpawn = ts;
-      if(!cleared && Math.random() < 0.20){
+      if(!cleared && Math.random() < PICKUP_CHANCE){
         if(!spawnPickup()){ queuePattern(score); }
       } else {
         queuePattern(score);
       }
     }
 
-    // esegui coda
+    // esegui coda sfalsata
     for(let i=spawnQueue.length-1;i>=0;i--){
       spawnQueue[i].delay -= delta;
       if(spawnQueue[i].delay <= 0){
@@ -733,7 +735,7 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     }
 
-    // ostacoli
+    // ostacoli (oscillazioni dopo 300)
     for(let i=obstacles.length-1;i>=0;i--){
       const o=obstacles[i];
       o.baseX -= speed;
@@ -757,12 +759,12 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     /* --- Fisica player --- */
-    const invert = controlsInverted();
-    const leftHeld = keys.left, rightHeld = keys.right;
+    const leftActive  = controlsInverted() ? keys.right : keys.left;
+    const rightActive = controlsInverted() ? keys.left  : keys.right;
 
     const accel = player.onGround ? MOVE_ACCEL : MOVE_ACCEL_AIR;
-    if((invert?rightHeld:leftHeld) && !(invert?leftHeld:rightHeld))  player.vx -= accel;
-    else if((invert?leftHeld:rightHeld) && !(invert?rightHeld:leftHeld)) player.vx += accel;
+    if(leftActive && !rightActive)  player.vx -= accel;
+    else if(rightActive && !leftActive) player.vx += accel;
     else player.vx *= FRICTION;
     player.vx = Math.max(-MAX_VX, Math.min(MAX_VX, player.vx));
 
@@ -787,28 +789,28 @@ document.addEventListener('DOMContentLoaded', () => {
 
     player.y += player.vy;
 
-    // limiti verticali
+    // limiti verticali (non oltre la corsia alta)
     const topLimit = Math.min(FLIGHT_MIN_Y, 2);
     if(player.y < topLimit){
       player.y = topLimit;
       if(player.vy < 0) player.vy = 0;
     }
 
-    // atterraggio
+    // atterraggio & coyote
     if(player.y + player.h >= ground){
       player.y = ground - player.h;
       if(!player.onGround){ player.onGround = true; coyoteTimer = 0; tryPerformJump(); }
       if(player.vy > 0) player.vy = 0;
     } else {
       if(player.onGround){ player.onGround = false; coyoteTimer = COYOTE_TIME; }
-      else { coyoteTimer -= (delta); }
+      else { coyoteTimer -= delta; }
     }
 
     // salto variabile
     if(!keys.jumpHeld && player.vy < SHORT_CUT_VY){ player.vy = SHORT_CUT_VY; }
 
     // timers
-    JUMP_BUFFER -= delta;
+    jumpBufferTimer -= delta;
     invuln -= delta;
     if(invuln <= 0){ invuln = 0; cvs.classList.remove('blink'); }
 
@@ -824,14 +826,12 @@ document.addEventListener('DOMContentLoaded', () => {
   /* ---------- Input ---------- */
   const keys = { left:false, right:false, up:false, jumpHeld:false };
 
-  function requestJump(){ JUMP_BUFFER = 0.16; }
-
+  function requestJump(){ jumpBufferTimer = JUMP_BUFFER; }
   function doDirectionalJump(){
     let vy = BASE_JUMP_VY;
     let impulseX = 0;
-    const invert = controlsInverted();
-    const leftActive = invert ? keys.right : keys.left;
-    const rightActive = invert ? keys.left : keys.right;
+    const leftActive  = controlsInverted() ? keys.right : keys.left;
+    const rightActive = controlsInverted() ? keys.left  : keys.right;
 
     if(rightActive && !leftActive){ vy = BASE_JUMP_VY * 1.05; impulseX = 2.8 * SCALE; }
     else if(leftActive && !rightActive){ vy = BASE_JUMP_VY * 0.62; impulseX = -2.1 * SCALE; }
@@ -839,10 +839,10 @@ document.addEventListener('DOMContentLoaded', () => {
     player.vy = vy;
     player.vx = Math.max(-MAX_VX, Math.min(MAX_VX, player.vx + impulseX));
     player.onGround = false;
-    JUMP_BUFFER = 0;
+    coyoteTimer = 0; jumpBufferTimer = 0;
   }
   function tryPerformJump(){
-    if ((coyoteTimer > 0 || player.onGround) && JUMP_BUFFER > 0) doDirectionalJump();
+    if ((coyoteTimer > 0 || player.onGround) && jumpBufferTimer > 0) doDirectionalJump();
   }
 
   window.addEventListener('keydown', async (e)=>{
@@ -893,13 +893,10 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('sacrificeBlock').style.display='block';
   });
 
-  // Inizializzazione responsive e reset
+  // Inizializzazione
   applyScale(calcBestScale(), false);
   renderLives(); updateChargeBar();
   epilogue.style.display='none';
-
-  // Mostra il gioco subito se in debug
-  if(DEBUG_SHOW_GAME){ gameSec.style.display='block'; }
 });
 </script>
 </body>
