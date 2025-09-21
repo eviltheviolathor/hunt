@@ -147,7 +147,7 @@
   @keyframes bl { from{opacity:1} to{opacity:.35} }
 </style>
 </head>
-<body>
+<body><h1>arcodio</h1>
   <main class="page">
     <!-- HERO -->
     <div class="hero" id="heroBox"></div>
@@ -190,7 +190,7 @@
     <!-- GIOCO (nascosto fino al rituale) -->
     <section id="game">
       <h2>La Corsa della Zucca</h2>
-      <div id="goal">Obiettivo (debug): <strong>10</strong> punti per sbloccare l’epilogo.</div>
+      <div id="goal">Obiettivo: <strong>666</strong> punti per sbloccare l’epilogo.</div>
       <div id="canvasWrap">
         <div id="scoreHud" class="scoreHud">0</div>
         <div class="chargeLabel">Carica volo</div>
@@ -232,12 +232,14 @@
 <script>
 document.addEventListener('DOMContentLoaded', () => {
   /* ====== Parametri chiave ====== */
-  const TARGET_SCORE = 10; // DEBUG — rimetti 666 quando vuoi
+  const TARGET_SCORE = 666; // ← punteggio obiettivo (pubblicazione)
+  // aggiorna il testo dell'obiettivo in pagina
+  const goalEl = document.getElementById('goal');
+  if (goalEl) goalEl.innerHTML = `Obiettivo: <strong>${TARGET_SCORE}</strong> punti per sbloccare l’epilogo.`;
 
   /* Helper autoscroll */
   function autoScrollTo(el){
     if(!el) return;
-    // aspetta che il layout si aggiorni e poi scrolla
     setTimeout(()=>{ el.scrollIntoView({behavior:'smooth', block:'start'}); }, 60);
   }
 
