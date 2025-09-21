@@ -39,8 +39,8 @@
   .success{color:var(--ok)} .fail{color:var(--err)}
   .footer{margin-top:clamp(12px,2vw,18px);color:var(--accent2);font-size:.95rem}
 
-  /* RITUALE */
-  #rituale{display:block;width:100%;max-width:min(1100px,96vw);margin:clamp(16px,2.5vw,24px) auto 0}
+  /* RITUALE (NASCOSTO all'avvio!) */
+  #rituale{display:none;width:100%;max-width:min(1100px,96vw);margin:clamp(16px,2.5vw,24px) auto 0}
   .rituale-text{margin:12px auto 8px;line-height:1.45;color:var(--fg);font-size:clamp(14px,2vw,18px)}
   .rit-title{font-size:clamp(22px,4vw,36px);margin:8px 0 12px;color:var(--accent);text-shadow:0 0 10px var(--accent),0 0 24px var(--accent2);letter-spacing:.08em}
   .ritual-wrap{display:flex;align-items:center;justify-content:center;gap:16px;margin-top:8px}
@@ -55,6 +55,7 @@
   .rit-field input{width:100%;padding:10px 12px;border-radius:10px;border:2px solid rgba(43,255,136,.35);background:rgba(10,10,10,.85);color:var(--fg);font-size:clamp(14px,2vw,16px)}
   .rit-btn{position:absolute;left:50%;top:62%;transform:translate(-50%,-50%)}
   .rit-msg{min-height:20px;margin-top:8px;font-size:1rem}
+
   @media (max-width:700px){
     .rf-top   {left:50%; top:106%; width:92%;}
     .rf-mid   {left:50%; top:124%; width:92%;}
@@ -62,7 +63,7 @@
     .rit-btn  {top:160%;}
   }
 
-  /* GIOCO */
+  /* GIOCO (NASCOSTO all'avvio!) */
   #game{display:none;width:100%;max-width:100vw;margin:28px auto 0;text-align:center}
   #game h2{margin:8px 0 6px;font-size:clamp(20px,4vw,28px);color:var(--accent);text-shadow:0 0 10px var(--accent)}
   #goal{color:var(--muted); margin-bottom:8px}
@@ -74,18 +75,13 @@
   }
   #canvasWrap.invert{ filter: invert(1) hue-rotate(180deg); }
   canvas{display:block;width:100%;height:auto;background:#000}
-
   .hud{color:var(--muted);margin-top:8px;font-size:clamp(14px,2vw,16px)}
-  .score{color:var(--accent2);margin-left:6px}
-  .loading{color:var(--accent2); margin:8px 0}
-
   .scoreHud{
     position:absolute; left:8px; top:8px;
     padding:6px 10px; font-weight:700;
     background:rgba(0,0,0,.55);
     border:1px solid rgba(43,255,136,.35);
     border-radius:8px; color:var(--accent2);
-    text-shadow:0 0 8px rgba(43,255,136,.35);
     user-select:none; pointer-events:none;
   }
   .livesHud{
@@ -97,7 +93,6 @@
     user-select:none; pointer-events:none;
   }
   .livesHud img{ width:18px; height:18px; }
-
   .chargeLabel{
     position:absolute; left:50%; transform:translateX(-50%);
     top:28px; color:var(--muted); font-size:12px; user-select:none;
@@ -109,7 +104,6 @@
     overflow:hidden; user-select:none;
   }
   .chargeFill{height:100%; width:0%; background:linear-gradient(90deg, #2bff88, #6bffda)}
-
   .overlayMsg{
     position:absolute; inset:0;
     display:none; align-items:center; justify-content:center;
@@ -119,7 +113,6 @@
   .overlayMsg .box{
     padding:14px 18px; border-radius:12px; background:rgba(0,0,0,.75);
     border:1px solid rgba(43,255,136,.35); color:#fff; font-weight:700;
-    text-shadow:0 0 10px rgba(43,255,136,.35);
     font-size:clamp(16px,2.2vw,22px); max-width:80%; text-align:center;
   }
 
@@ -138,7 +131,7 @@
   .specs ul{margin:8px 0 0 18px}
   .specs li{margin:4px 0}
 
-  /* Epilogo */
+  /* Epilogo (solo quando sbloccato) */
   .lore{
     max-width:min(900px,96vw);
     margin:28px auto 0;
@@ -150,17 +143,16 @@
     line-height:1.6;
     display:none;
   }
-  .lore h3{ margin:0 0 8px; color:var(--accent); font-size:clamp(18px,3vw,22px); text-shadow:0 0 8px rgba(43,255,136,.25); }
+  .lore h3{ margin:0 0 8px; color:var(--accent); font-size:clamp(18px,3vw,22px); }
   .lore p{ margin:10px 0; color:var(--fg); }
   .lore .instr{ margin-top:12px; color:var(--accent2); border-top:1px dashed rgba(43,255,136,.25); padding-top:10px; font-weight:700; }
   .lore button{ margin-top:12px; padding:10px 14px; border-radius:10px; background:rgba(30,30,30,.9); color:#fff; border:2px solid rgba(43,255,136,.35); font-weight:800; cursor:pointer; }
-  .lore .hidden-part{ display:none; }
 
   .blink{ animation: bl 0.12s linear infinite alternate; }
   @keyframes bl { from{opacity:1} to{opacity:.35} }
 </style>
 </head>
-<body><h1>diominchia</h1>
+<body>
   <main class="page">
     <!-- HERO -->
     <div class="hero" id="heroBox"></div>
@@ -177,7 +169,7 @@
     <div id="message" class="msg"></div>
     <div class="footer" id="hintBox"></div>
 
-    <!-- RITUALE -->
+    <!-- RITUALE (nascosto, si mostra dopo la combinazione corretta) -->
     <section id="rituale">
       <p class="rituale-text" id="ritText"></p>
       <div class="rit-title">Inizia il Rituale</div>
@@ -200,7 +192,7 @@
       <div id="ritMsg" class="rit-msg"></div>
     </section>
 
-    <!-- GIOCO -->
+    <!-- GIOCO (nascosto fino al rituale) -->
     <section id="game">
       <h2>La Corsa della Zucca</h2>
       <div id="goal">Obiettivo (debug): <strong>10</strong> punti per sbloccare l’epilogo.</div>
@@ -225,8 +217,6 @@
           <li>🐞 <strong>Insetto</strong>: comandi invertiti per 5 secondi.</li>
           <li><strong>Volo</strong>: tieni premuto <strong>↑</strong> in aria per rimanere sospeso; l’energia scende e si ricarica lentamente a terra.</li>
           <li>Salto direzionale: <strong>→ + salto</strong> = lungo & basso; <strong>← + salto</strong> = corto & all’indietro.</li>
-          <li>Dopo i 300 punti la velocità aumenta ulteriormente; dopo i 500 compaiono disturbi casuali (shake o inversione colori).</li>
-          <li>(Debug) Epilogo sbloccato a <strong>10</strong> punti in una singola partita.</li>
         </ul>
       </div>
     </section>
@@ -237,7 +227,7 @@
       <p>Hai composto i simboli proibiti, tracciato il rituale e posizionato il pugnale. La candela nera illumina il centro del pentacolo e dopo aver bruciato i peli pubici della zombie rossa sei sopravvissuto agli incubi di guardia: una voce, profonda e demoniaca ti riconosce.</p>
       <p class="instr">Mostra a tutti la tua opera, ottieni il tuo ruolo, scrivi in Dark Room <strong>/rispondi</strong> e immetti il codice segreto: <strong>258069759</strong></p>
       <button id="obeyBtn">Ho Ubbidito, Signore delle Tenebre!</button>
-      <div class="hidden-part" id="sacrificeBlock">
+      <div class="hidden-part" id="sacrificeBlock" style="display:none">
         <p><em>"Ogni rituale demoniaco, per essere portato a compimento ha bisogno di un sacrificio, chi sarà la tua vittima sacrificale?"</em></p>
         <p class="instr">"A mezzanotte (e solo a mezzanotte) nella Dark Room usa il comando <strong>/Sacrifica</strong> e nomina l'utente. Attenzione però, il malcapitato perderà la metà dei suoi punti esperienza!"</p>
       </div>
@@ -296,9 +286,7 @@ document.addEventListener('DOMContentLoaded', () => {
       message.className='msg success'; message.textContent='';
       if(!ritualeShown){
         ritText.textContent="Bene, molto bene. Quindi Herr Knock ti ha insegnato molto. Per procedere con il rituale è fondamentale trovare i tre ingredienti per Evocare il Principe delle Tenebre. Credo che tu possa trovarli all'interno del server, ma non sarà facile.";
-        ritualeShown=true;
-        gameSec.style.display='block'; // sblocca il gioco solo ora
-        gameSec.scrollIntoView({behavior:'smooth'});
+        rituale.style.display='block'; rituale.scrollIntoView({behavior:'smooth'}); ritualeShown=true;
       }
     } else { message.className='msg fail'; message.textContent='sbagliato'; }
   }
@@ -306,10 +294,42 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('check').onclick=check;
   build();
 
+  /* ===== RITUALE — validazione ingredienti e sblocco gioco ===== */
+  const f1=document.getElementById('f1'), f2=document.getElementById('f2'), f3=document.getElementById('f3');
+  const ritMsg=document.getElementById('ritMsg');
+  function norm(s){return s.normalize('NFD').replace(/\p{Diacritic}/gu,'').toLowerCase().replace(/[^\p{L}\p{N}\s]/gu,'').replace(/\s+/g,' ').trim();}
+  function classify(text){
+    const v=norm(text); if(!v) return null;
+    const has=(...ws)=>ws.every(w=>v.includes(w));
+    if(v.includes('candela') && (v.includes('nera')||v.includes('nero'))) return 'CANDLE';
+    const rust=v.includes('arrugginito')||v.includes('arrugginita')||v.includes('ossidato')||v.includes('ossidata')||v.includes('ruggine');
+    if(v.includes('coltello') && rust && has('simbolo','bestia')) return 'KNIFE';
+    const peli=v.includes('peli')||v.includes('pelo'); const pub=v.includes('pubici')||v.includes('pubico');
+    const fem=v.includes('femmina')||v.includes('donna');
+    if(peli && pub && v.includes('zombie') && fem) return 'HAIR';
+    return null;
+  }
+  function submitRitual(){
+    const types=[classify(f1.value), classify(f2.value), classify(f3.value)];
+    const set=new Set(types.filter(Boolean));
+    const ok=set.has('CANDLE') && set.has('KNIFE') && set.has('HAIR') && types.every(t=>t!==null);
+    if(ok){
+      ritMsg.className='rit-msg success';
+      ritMsg.textContent='Il cerchio si illumina… il portale si apre!';
+      gameSec.style.display='block';
+      gameSec.scrollIntoView({behavior:'smooth'});
+    }else{
+      ritMsg.className='rit-msg fail';
+      ritMsg.textContent='La formula non risponde. Forse hai sbagliato gli ingredienti...';
+    }
+  }
+  document.getElementById('completeBtn').onclick=submitRitual;
+  [f1,f2,f3].forEach(el=>el.addEventListener('keydown',e=>{ if(e.key==='Enter') submitRitual(); e.stopPropagation(); }));
+
   /* =========================
      MINIGIOCO — Pumpkin Runner (Responsive)
      ========================= */
-  const BASE_W = 900, BASE_H = 300; // dimensioni logiche di riferimento
+  const BASE_W = 900, BASE_H = 300; // dimensioni logiche
 
   // Canvas & UI
   const cvs = document.getElementById('runner'), ctx = cvs.getContext('2d');
@@ -339,12 +359,12 @@ document.addEventListener('DOMContentLoaded', () => {
     })));
   }
 
-  /* ---------- Stato / costanti che scalano ---------- */
+  /* ---------- Stato/Costanti ---------- */
   let SCALE = 1;
   let running=false, gameOver=false, score=0, lastSpawn=0, lastTs=null;
   let cleared=false;
 
-  // Velocità (curva progressiva)
+  // Velocità progressiva
   let speed = 0.8;
   let MAX_SPEED_BASE = 4.2;
   const SPEED_MULT_BASE = 1.10;
@@ -361,7 +381,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Oggetti
   const obstacles=[];   // {x,y,w,h,img,type,scale,baseX,baseY,oscA,oscT,oscP}
-  const pickups=[];     // {x,y,type:'candle'|'heart'|'bug', w,h, emoji}
+  const pickups=[];     // {x,y,w,h,type,emoji}
   const spawnQueue=[];  // {type, delay, scale}
 
   // Vite
@@ -399,7 +419,7 @@ document.addEventListener('DOMContentLoaded', () => {
   let controlsInvertUntil = 0;
   const controlsInverted = ()=> performance.now()/1000 < controlsInvertUntil;
 
-  /* ---------- Responsive scaling ---------- */
+  /* ---------- Responsive ---------- */
   function calcBestScale(){
     const vw = window.innerWidth;
     const vh = window.innerHeight;
@@ -411,8 +431,6 @@ document.addEventListener('DOMContentLoaded', () => {
     s = Math.max(0.8, Math.min(s, 3.0));
     return s;
   }
-  const scaleValue = (v, r)=> v * r;
-
   function applyScale(newScale, keepPositions=true){
     const ratio = newScale / SCALE;
     SCALE = newScale;
@@ -439,30 +457,12 @@ document.addEventListener('DOMContentLoaded', () => {
     FLIGHT_MIN_Y = (airLaneY - (10 * SCALE)) - (44 * SCALE);
 
     if(keepPositions){
-      player.x = scaleValue(player.x, ratio);
-      player.y = scaleValue(player.y, ratio);
-      player.w = scaleValue(player.w, ratio);
-      player.h = scaleValue(player.h, ratio);
-      player.vx = scaleValue(player.vx, ratio);
-      player.vy = scaleValue(player.vy, ratio);
-      obstacles.forEach(o=>{
-        o.x = scaleValue(o.x, ratio);
-        o.y = scaleValue(o.y, ratio);
-        o.w = scaleValue(o.w, ratio);
-        o.h = scaleValue(o.h, ratio);
-        o.baseX = scaleValue(o.baseX, ratio);
-        o.baseY = scaleValue(o.baseY, ratio);
-        o.oscA = scaleValue(o.oscA, ratio);
-      });
-      pickups.forEach(p=>{
-        p.x = scaleValue(p.x, ratio);
-        p.y = scaleValue(p.y, ratio);
-        p.w = scaleValue(p.w, ratio);
-        p.h = scaleValue(p.h, ratio);
-      });
+      player.x *= ratio; player.y *= ratio; player.w *= ratio; player.h *= ratio;
+      player.vx *= ratio; player.vy *= ratio;
+      obstacles.forEach(o=>{ o.x*=ratio; o.y*=ratio; o.w*=ratio; o.h*=ratio; o.baseX*=ratio; o.baseY*=ratio; o.oscA*=ratio; });
+      pickups.forEach(p=>{ p.x*=ratio; p.y*=ratio; p.w*=ratio; p.h*=ratio; });
     } else {
-      player.x = 120 * SCALE;
-      player.w = 44 * SCALE; player.h = 44 * SCALE;
+      player.x = 120 * SCALE; player.w = 44 * SCALE; player.h = 44 * SCALE;
       player.y = ground - player.h; player.vx = 0; player.vy = 0; player.onGround = true;
     }
   }
@@ -474,13 +474,13 @@ document.addEventListener('DOMContentLoaded', () => {
     effectTimer += dt;
     if(effectTimer >= nextEffectAt){
       effectTimer = 0;
-      nextEffectAt = 8 + Math.random()*6;
+      nextEffectAt = 8 + Math.random()*6; // media ~10s
       if(Math.random() < 0.5){ shakeTime = 1.6; }
       else { invertFilterTime = 2.4; wrap.classList.add('invert'); }
     }
   }
 
-  /* ---------- Spawn ---------- */
+  /* ---------- Spawn ostacoli ---------- */
   function drawImage(img, x,y,w,h){ if(img && img.complete && img.naturalWidth) ctx.drawImage(img,x,y,w,h); }
 
   function spawnObstacleNow(type, scale=1){
@@ -491,13 +491,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const h = w * ratio;
 
     let y;
-    if(type==='ground'){
-      y = ground - h + (Math.random()*6 - 3) * SCALE;
-    } else if(type==='air'){
-      y = airLaneY - h/2 + (Math.random()*12 - 6) * SCALE;
-    } else {
-      y = midLaneY - h/2 + (Math.random()*10 - 5) * SCALE;
-    }
+    if(type==='ground'){ y = ground - h + (Math.random()*6 - 3) * SCALE; }
+    else if(type==='air'){ y = airLaneY - h/2 + (Math.random()*12 - 6) * SCALE; }
+    else { y = midLaneY - h/2 + (Math.random()*10 - 5) * SCALE; }
 
     obstacles.push({
       x:cvs.width+10, y, w, h, img, type, scale,
@@ -544,7 +540,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // Collezionabili
+  /* ---------- Collezionabili ---------- */
   const PICKUP_CHANCE = 0.20;
   const PICKUP_COOLDOWN = 4.0;
   let lastPickupTime = -Infinity;
@@ -601,26 +597,17 @@ document.addEventListener('DOMContentLoaded', () => {
     scoreHudEl.textContent='0'; scoreEl.textContent='0';
     invuln = 0; lives = MAX_LIVES; renderLives();
     cvs.classList.remove('blink');
-
-    epilogue.style.display='none';
-    const sb=document.getElementById('sacrificeBlock'); if(sb) sb.style.display='none';
   }
 
   function endGame(){
     gameOver = true; running = false;
     overlay.style.display='flex';
     const finalScore = Math.floor(score);
-    if(cleared){
-      overlayBox.style.color = 'var(--ok)';
-      overlayBox.textContent = String(finalScore); // punteggio come da richiesta
-      epilogue.style.display = 'block';
-    } else {
-      overlayBox.style.color = 'var(--err)';
-      overlayBox.textContent = 'Ritenta quante volte vuoi, tanto non ci riuscirai mai!';
-      epilogue.style.display = 'none';
-    }
+    overlayBox.style.color = cleared ? 'var(--ok)' : 'var(--err)';
+    overlayBox.textContent = cleared ? String(finalScore) : 'Ritenta quante volte vuoi, tanto non ci riuscirai mai!';
     restartBtn.style.display='inline-block';
     cvs.classList.remove('blink');
+    if(cleared){ document.getElementById('epilogue').style.display='block'; }
   }
 
   /* ---------- Danni ---------- */
@@ -687,7 +674,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     drawBackground();
 
-    // piste
+    // linee corsie
     ctx.strokeStyle='rgba(43,255,136,.3)';
     ctx.beginPath(); ctx.moveTo(0,ground+0.5); ctx.lineTo(cvs.width,ground+0.5); ctx.stroke();
     ctx.setLineDash([6*SCALE,6*SCALE]);
@@ -695,7 +682,7 @@ document.addEventListener('DOMContentLoaded', () => {
     ctx.beginPath(); ctx.moveTo(0,airLaneY+0.5); ctx.lineTo(cvs.width,airLaneY+0.5); ctx.stroke();
     ctx.setLineDash([]);
 
-    // spawn
+    // spawn clock
     const baseInterval = 2400 - (speed/SCALE)*90;
     const jitter = 900 * Math.random();
     const interval = Math.max(1400, baseInterval + jitter);
@@ -789,7 +776,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     player.y += player.vy;
 
-    // limiti verticali (non oltre la corsia alta)
+    // limiti verticali (massimo fino poco sopra la corsia alta)
     const topLimit = Math.min(FLIGHT_MIN_Y, 2);
     if(player.y < topLimit){
       player.y = topLimit;
@@ -825,7 +812,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
   /* ---------- Input ---------- */
   const keys = { left:false, right:false, up:false, jumpHeld:false };
-
   function requestJump(){ jumpBufferTimer = JUMP_BUFFER; }
   function doDirectionalJump(){
     let vy = BASE_JUMP_VY;
@@ -876,7 +862,7 @@ document.addEventListener('DOMContentLoaded', () => {
   });
   cvs.addEventListener('pointerup', ()=>{ keys.jumpHeld=false; keys.up=false; });
 
-  /* ---------- Avvio ---------- */
+  /* ---------- Avvio gioco ---------- */
   async function startGame(){
     loadingMsg.style.display='block';
     await preload([playerImg, bgImg, ...monsterImgs]);
@@ -888,12 +874,12 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('startGame').onclick = startGame;
   document.getElementById('restartGame').onclick = ()=>{ resetGame(); startGame(); };
 
-  // Epilogo: mostra la parte del sacrificio al click
-  document.getElementById('obeyBtn')?.addEventListener('click', ()=>{
-    document.getElementById('sacrificeBlock').style.display='block';
+  /* Epilogo: mostra la parte del sacrificio al click */
+  document.getElementById('obeyBtn').addEventListener('click', ()=>{
+    const sb=document.getElementById('sacrificeBlock'); if(sb) sb.style.display='block';
   });
 
-  // Inizializzazione
+  /* Inizializzazione */
   applyScale(calcBestScale(), false);
   renderLives(); updateChargeBar();
   epilogue.style.display='none';
