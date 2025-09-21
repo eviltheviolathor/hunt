@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Il Rituale — Combinazione di Simboli</title>
+<title>Il Rituale — Catena di Simboli</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700&display=swap');
 
@@ -13,7 +13,7 @@
     --card:#0d0d0d; --ok:#22c55e; --err:#ff4d4d;
   }
   *{box-sizing:border-box}
-  html,body{margin:0;background:radial-gradient(circle at 50% 15%, #111 0%, #000 80%);color:var(--fg);font-family:'Cinzel Decorative', serif}
+  html,body{margin:0;background:radial-gradient(circle at 50% 15%, #111 0%, #000 80%);color:var(--fg);font-family:'Cinzel Decorative', serif; scroll-behavior:smooth}
   .page{max-width:1600px;margin:0 auto;padding:clamp(12px,2vw,24px);display:flex;flex-direction:column;align-items:center;text-align:center}
 
   /* HERO */
@@ -39,7 +39,7 @@
   .success{color:var(--ok)} .fail{color:var(--err)}
   .footer{margin-top:clamp(12px,2vw,18px);color:var(--accent2);font-size:.95rem}
 
-  /* RITUALE (NASCOSTO all'avvio!) */
+  /* RITUALE (NASCOSTO all'avvio) */
   #rituale{display:none;width:100%;max-width:min(1100px,96vw);margin:clamp(16px,2.5vw,24px) auto 0}
   .rituale-text{margin:12px auto 8px;line-height:1.45;color:var(--fg);font-size:clamp(14px,2vw,18px)}
   .rit-title{font-size:clamp(22px,4vw,36px);margin:8px 0 12px;color:var(--accent);text-shadow:0 0 10px var(--accent),0 0 24px var(--accent2);letter-spacing:.08em}
@@ -63,7 +63,7 @@
     .rit-btn  {top:160%;}
   }
 
-  /* GIOCO (NASCOSTO all'avvio!) */
+  /* GIOCO (NASCOSTO all'avvio) */
   #game{display:none;width:100%;max-width:100vw;margin:28px auto 0;text-align:center}
   #game h2{margin:8px 0 6px;font-size:clamp(20px,4vw,28px);color:var(--accent);text-shadow:0 0 10px var(--accent)}
   #goal{color:var(--muted); margin-bottom:8px}
@@ -101,20 +101,15 @@
     position:absolute; left:50%; transform:translateX(-50%);
     top:44px; width:220px; height:12px;
     background:rgba(255,255,255,.08); border:1px solid rgba(43,255,136,.35); border-radius:999px;
-    overflow:hidden; user-select:none;
-  }
+    overflow:hidden; user-select:none; }
   .chargeFill{height:100%; width:0%; background:linear-gradient(90deg, #2bff88, #6bffda)}
   .overlayMsg{
-    position:absolute; inset:0;
-    display:none; align-items:center; justify-content:center;
-    background:rgba(0,0,0,.45);
-    pointer-events:none;
-  }
+    position:absolute; inset:0; display:none; align-items:center; justify-content:center;
+    background:rgba(0,0,0,.45); pointer-events:none; }
   .overlayMsg .box{
     padding:14px 18px; border-radius:12px; background:rgba(0,0,0,.75);
     border:1px solid rgba(43,255,136,.35); color:#fff; font-weight:700;
-    font-size:clamp(16px,2.2vw,22px); max-width:80%; text-align:center;
-  }
+    font-size:clamp(16px,2.2vw,22px); max-width:80%; text-align:center; }
 
   /* SPECIFICHE */
   .specs{
@@ -131,7 +126,7 @@
   .specs ul{margin:8px 0 0 18px}
   .specs li{margin:4px 0}
 
-  /* Epilogo (solo quando sbloccato) */
+  /* Epilogo (solo se sbloccato) */
   .lore{
     max-width:min(900px,96vw);
     margin:28px auto 0;
@@ -157,7 +152,7 @@
     <!-- HERO -->
     <div class="hero" id="heroBox"></div>
 
-    <h1>Combinazione di Simboli</h1>
+    <h1>Catena di Simboli</h1>
     <p class="sub">Allinea i quattro simboli corretti per risvegliare l'oscuro portale.</p>
 
     <section class="panel" id="panel"></section>
@@ -237,7 +232,14 @@
 <script>
 document.addEventListener('DOMContentLoaded', () => {
   /* ====== Parametri chiave ====== */
-  const TARGET_SCORE = 10; // DEBUG — cambia a 666 quando vuoi
+  const TARGET_SCORE = 10; // DEBUG — rimetti 666 quando vuoi
+
+  /* Helper autoscroll */
+  function autoScrollTo(el){
+    if(!el) return;
+    // aspetta che il layout si aggiorni e poi scrolla
+    setTimeout(()=>{ el.scrollIntoView({behavior:'smooth', block:'start'}); }, 60);
+  }
 
   /* HERO con fallback */
   const hero = document.getElementById('heroBox');
@@ -279,14 +281,17 @@ document.addEventListener('DOMContentLoaded', () => {
   function build(){panel.innerHTML='';state=[];for(let i=0;i<4;i++)panel.appendChild(createSlot(i));}
   function shuffle(){for(let i=0;i<4;i++)state[i]=Math.floor(Math.random()*SYMBOLS.length);
     [...panel.children].forEach((slotEl,i)=>renderSymbol(slotEl.querySelector('.symbol'),state[i]));message.textContent='';}
+
   function check(){
     const picked=state.map(idx=>SYMBOLS[idx].id);
     const ok=picked.length===TARGET.length && picked.every((id,i)=>id===TARGET[i]);
     if(ok){
       message.className='msg success'; message.textContent='';
       if(!ritualeShown){
-        ritText.textContent="Bene, molto bene. Quindi Herr Knock ti ha insegnato molto. Per procedere con il rituale è fondamentale trovare i tre ingredienti per Evocare il Principe delle Tenebre. Credo che tu possa trovarli all'interno del server, ma non sarà facile.";
-        rituale.style.display='block'; rituale.scrollIntoView({behavior:'smooth'}); ritualeShown=true;
+        ritText.textContent="Bene, molto bene. Quindi Herr Knock ti ha insegnato molto. Per procedere con il rituale è fondamentale trovare i tre ingredienti per Evocare il Principe delle Tenebre. Credo che tu possa trovarli all'interno del server, ma non sarà facile. Si tratta di tre oggetti, l'ordine non è importante (il Principe adora il caos) ma fai attenzione a nominarli in maniera corretta.";
+        rituale.style.display='block';
+        ritualeShown=true;
+        autoScrollTo(rituale);
       }
     } else { message.className='msg fail'; message.textContent='sbagliato'; }
   }
@@ -315,9 +320,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const ok=set.has('CANDLE') && set.has('KNIFE') && set.has('HAIR') && types.every(t=>t!==null);
     if(ok){
       ritMsg.className='rit-msg success';
-      ritMsg.textContent='Il cerchio si illumina… il portale si apre!';
+      ritMsg.innerHTML='<strong>Il cerchio si illumina… il portale si apre!</strong><br>Dalle ombre convergono verso di te delle terrificanti creature, scappa da loro prima che ti rubino l\'anima e dimostra di essere degno!';
       gameSec.style.display='block';
-      gameSec.scrollIntoView({behavior:'smooth'});
+      autoScrollTo(gameSec);
     }else{
       ritMsg.className='rit-msg fail';
       ritMsg.textContent='La formula non risponde. Forse hai sbagliato gli ingredienti...';
@@ -508,8 +513,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function queuePattern(currentScore){
     let minC=2, maxC=2;
-    if(currentScore > 600){ minC=4; maxC=4; }
-    else if(currentScore > 400){ minC=3; maxC=3; }
+    if(currentScore > 600){ minC=4, maxC=4; }
+    else if(currentScore > 400){ minC=3, maxC=3; }
 
     let weights = {ground:0.62, mid:0.23, air:0.15};
     if(currentScore > 400) weights = {ground:0.58, mid:0.27, air:0.15};
@@ -603,11 +608,17 @@ document.addEventListener('DOMContentLoaded', () => {
     gameOver = true; running = false;
     overlay.style.display='flex';
     const finalScore = Math.floor(score);
-    overlayBox.style.color = cleared ? 'var(--ok)' : 'var(--err)';
-    overlayBox.textContent = cleared ? String(finalScore) : 'Ritenta quante volte vuoi, tanto non ci riuscirai mai!';
-    restartBtn.style.display='inline-block';
+    if(cleared){
+      overlayBox.style.color = 'var(--ok)';
+      overlayBox.textContent = `Hai Ottenuto ${finalScore} Punti!`;
+      document.getElementById('epilogue').style.display='block';
+      autoScrollTo(document.getElementById('epilogue'));
+    } else {
+      overlayBox.style.color = 'var(--err)';
+      overlayBox.textContent = 'Ritenta quante volte vuoi, tanto non ci riuscirai mai!';
+    }
+    document.getElementById('restartGame').style.display='inline-block';
     cvs.classList.remove('blink');
-    if(cleared){ document.getElementById('epilogue').style.display='block'; }
   }
 
   /* ---------- Danni ---------- */
@@ -868,21 +879,21 @@ document.addEventListener('DOMContentLoaded', () => {
     await preload([playerImg, bgImg, ...monsterImgs]);
     loadingMsg.style.display='none';
     if(!running){
-      running = true; restartBtn.style.display='none'; requestAnimationFrame(loop);
+      running = true; document.getElementById('restartGame').style.display='none'; requestAnimationFrame(loop);
     }
   }
   document.getElementById('startGame').onclick = startGame;
   document.getElementById('restartGame').onclick = ()=>{ resetGame(); startGame(); };
 
-  /* Epilogo: mostra la parte del sacrificio al click */
+  /* Epilogo: mostra la parte del sacrificio al click (con autoscroll) */
   document.getElementById('obeyBtn').addEventListener('click', ()=>{
-    const sb=document.getElementById('sacrificeBlock'); if(sb) sb.style.display='block';
+    const sb=document.getElementById('sacrificeBlock');
+    if(sb){ sb.style.display='block'; autoScrollTo(sb); }
   });
 
   /* Inizializzazione */
   applyScale(calcBestScale(), false);
   renderLives(); updateChargeBar();
-  epilogue.style.display='none';
 });
 </script>
 </body>
